@@ -5,6 +5,8 @@ import VerifyOTP from "../pages/VerifyOTP";
 import Login from "../pages/Login";
 
 import AdminDashboard from "../pages/AdminDashboard.jsx";
+import AdminUsers from "../pages/admin/AdminUsers";
+
 import InstructorDashboard from "../pages/InstructorDashboard";
 import StudentDashboard from "../pages/StudentDashboard";
 import Unauthorized from "../pages/Unauthorized";
@@ -15,10 +17,12 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<SendOTP />} />
         <Route path="/verify" element={<VerifyOTP />} />
         <Route path="/login" element={<Login />} />
 
+        {/* Admin routes */}
         <Route
           path="/admin"
           element={
@@ -29,6 +33,16 @@ export default function AppRoutes() {
         />
 
         <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Instructor routes */}
+        <Route
           path="/instructor"
           element={
             <ProtectedRoute allowedRoles={["INSTRUCTOR"]}>
@@ -37,6 +51,7 @@ export default function AppRoutes() {
           }
         />
 
+        {/* Student routes */}
         <Route
           path="/student"
           element={
@@ -46,6 +61,7 @@ export default function AppRoutes() {
           }
         />
 
+        {/* Unauthorized */}
         <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
     </BrowserRouter>
