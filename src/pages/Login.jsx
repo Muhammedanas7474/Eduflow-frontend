@@ -16,13 +16,21 @@ export default function Login() {
     try {
       const res = await loginUser({ phone_number: phone });
 
-      //  store JWT tokens
-      localStorage.setItem("access", res.data.data.access);
-      localStorage.setItem("refresh", res.data.data.refresh);
-      localStorage.setItem("role", res.data.data.role);
+      const { access, refresh, role } = res.data.data;
 
-      alert("Login successful");
-      navigate("/dashboard");
+     
+      localStorage.setItem("access", access);
+      localStorage.setItem("refresh", refresh);
+      localStorage.setItem("role", role);
+
+      
+      if (role === "ADMIN") {
+        navigate("/admin");
+      } else if (role === "INSTRUCTOR") {
+        navigate("/instructor");
+      } else {
+        navigate("/student");
+      }
     } catch (error) {
       alert("Login failed");
     }
