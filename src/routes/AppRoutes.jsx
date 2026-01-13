@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import SendOTP from "../pages/SendOTP";
 import VerifyOTP from "../pages/VerifyOTP";
-import Login from "../pages/Login";
 
 import AdminDashboard from "../pages/AdminDashboard.jsx";
 import AdminUsers from "../pages/admin/AdminUsers";
@@ -12,15 +11,17 @@ import StudentDashboard from "../pages/StudentDashboard";
 import Unauthorized from "../pages/Unauthorized";
 
 import ProtectedRoute from "./ProtectedRoute";
+import LandingPage from "../pages/LandingPage";
+import Login from "../pages/Login";
 
 export default function AppRoutes() {
   return (
-    <BrowserRouter>
+    
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<SendOTP />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/verify" element={<VerifyOTP />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login/>} />
 
         {/* Admin routes */}
         <Route
@@ -64,6 +65,6 @@ export default function AppRoutes() {
         {/* Unauthorized */}
         <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
-    </BrowserRouter>
+    
   );
 }
