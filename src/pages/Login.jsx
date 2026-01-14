@@ -1,31 +1,72 @@
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { loginUser } from "../api/auth.api";
-import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const [form, setForm] = useState({
+    phone_number: "",
+    password: "",
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
     try {
-      const res = await loginUser({ phone_number: "dummy" });
+      await loginUser(form);
 
-      const { access, refresh, role } = res.data.data;
+      localStorage.setItem("phone", form.phone_number);
+      localStorage.setItem("otp_context", "login");
 
-      localStorage.setItem("access", access);
-      localStorage.setItem("refresh", refresh);
-      localStorage.setItem("role", role);
-
-      if (role === "ADMIN") navigate("/admin");
-      else if (role === "INSTRUCTOR") navigate("/instructor");
-      else navigate("/student");
-    } catch {
-      alert("Login failed");
+      navigate("/verify");
+    } catch (err) {
+      alert(err?.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <button onClick={handleLogin}>Login</button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white p-6 rounded shadow w-96"
+      >
+        <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
+
+        <input
+          name="phone_number"
+          placeholder="Phone number"
+          className="w-full mb-3 p-2 border rounded"
+          onChange={handleChange}
+          required
+        />
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          className="w-full mb-4 p-2 border rounded"
+          onChange={handleChange}
+          required
+        />
+
+        <button className="w-full bg-blue-600 text-white py-2 rounded">
+          Login
+        </button>
+
+       
+        <div className="text-center mt-3">
+          <Link
+            to="/forgot-password"
+            className="text-sm text-blue-600 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+      </form>
     </div>
   );
 }
