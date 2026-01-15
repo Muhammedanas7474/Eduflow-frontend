@@ -1,1 +1,31 @@
 @import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-black text-gray-200 antialiased;
+  }
+}
+
+@layer utilities {
+  .text-neon {
+    color: #00ff9d;
+    text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+  }
+  
+  .bg-neon {
+    background-color: #00ff9d;
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
+  }
+
+  .border-neon {
+    border-color: #00ff9d;
+  }
+
+  .shadow-neon {
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.15);
+  }
+
+  .glass-card {
+    @apply bg-zinc-900/80 backdrop-blur-md border border-zinc-800;
+  }
+}

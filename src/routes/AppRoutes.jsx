@@ -1,77 +1,71 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
 
+import PublicLayout from "../layouts/PublicLayout";
+import DashboardLayout from "../layouts/DashboardLayout";
 
-import VerifyOTP from "../pages/VerifyOTP";
-
-import AdminDashboard from "../pages/AdminDashboard.jsx";
-import AdminUsers from "../pages/admin/AdminUsers";
-
-import InstructorDashboard from "../pages/InstructorDashboard";
-import StudentDashboard from "../pages/StudentDashboard";
+import LandingPage from "../pages/LandingPage";
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
+import VerifyOTP from "../pages/auth/VerifyOTP";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 import Unauthorized from "../pages/Unauthorized";
 
-import ProtectedRoute from "./ProtectedRoute";
-import LandingPage from "../pages/LandingPage";
-import Login from "../pages/Login";
-import Register from "../pages/Register.jsx";
-import ForgotPassword from "../pages/ForgotPassword.jsx";
-import ResetPassword from "../pages/ResetPassword.jsx";
+import AdminDashboard from "../pages/admin/AdminDashboard.jsx"
+import AdminUsers from "../pages/admin/AdminUsers";
+import InstructorDashboard from "../pages/instructor/InstructorDashboard";
+import StudentDashboard from "../pages/student/StudentDashboard";
 
 export default function AppRoutes() {
   return (
-    
-      <Routes>
-        {/* Public routes */}
+    <Routes>
+      {/* ===== PUBLIC ===== */}
+      <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/verify" element={<VerifyOTP />} />
-        <Route path="/login" element={<Login/>} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify" element={<VerifyOTP />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+      </Route>
 
+      {/* ===== ADMIN ===== */}
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+      </Route>
 
-        {/* Admin routes */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+      {/* ===== INSTRUCTOR ===== */}
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={["INSTRUCTOR"]}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/instructor" element={<InstructorDashboard />} />
+      </Route>
 
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN"]}>
-              <AdminUsers />
-            </ProtectedRoute>
-          }
-        />
+      {/* ===== STUDENT ===== */}
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={["STUDENT"]}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/student" element={<StudentDashboard />} />
+      </Route>
 
-        {/* Instructor routes */}
-        <Route
-          path="/instructor"
-          element={
-            <ProtectedRoute allowedRoles={["INSTRUCTOR"]}>
-              <InstructorDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Student routes */}
-        <Route
-          path="/student"
-          element={
-            <ProtectedRoute allowedRoles={["STUDENT"]}>
-              <StudentDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Unauthorized */}
-        <Route path="/unauthorized" element={<Unauthorized />} />
-      </Routes>
-    
+      {/* ===== FALLBACK ===== */}
+      <Route path="/unauthorized" element={<Unauthorized />} />
+    </Routes>
   );
 }

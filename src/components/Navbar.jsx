@@ -1,28 +1,34 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { Button } from "./UIComponents";
 
 export default function Navbar() {
+  const location = useLocation();
+  const isAuthPage = ["/login", "/register", "/verify", "/forgot-password", "/reset-password"].includes(location.pathname);
+
   return (
-    <nav className="flex items-center justify-between px-8 py-4 bg-white shadow">
-      <h1 className="text-2xl font-bold text-blue-600">
-        EduFlow
-      </h1>
-
-      <div className="space-x-4">
-        <Link
-          to="/login"
-          className="px-4 py-2 text-blue-600 font-medium hover:underline"
-        >
-          Login
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-zinc-800">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded bg-neon flex items-center justify-center font-bold text-black text-xl group-hover:shadow-[0_0_15px_rgba(0,255,157,0.6)] transition-all">
+            E
+          </div>
+          <span className="text-2xl font-bold text-white tracking-tight">
+            Edu<span className="text-neon">Flow</span>
+          </span>
         </Link>
-        
 
-
-        <Link
-          to="/register"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Register
-        </Link>
+        {!isAuthPage && (
+          <div className="flex items-center gap-4">
+            <Link to="/login">
+              <Button variant="ghost" className="!w-auto !py-2 !px-6">Login</Button>
+            </Link>
+            <Link to="/register">
+              <Button variant="primary" className="!w-auto !py-2 !px-6 shadow-neon">
+                Get Started
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
     </nav>
   );
