@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 
 export default function DashboardLayout() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-black text-white">
       <Navbar />
       <main className="p-6">
         <Outlet />

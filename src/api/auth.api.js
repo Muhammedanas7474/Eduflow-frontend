@@ -5,11 +5,11 @@ export const registerUser = (data) => {
 };
 
 export const loginUser = (data) => {
-  return api.post("/accounts/login/", data); 
+  return api.post("/accounts/login/", data);
 };
 
 export const verifyOTP = (data) => {
-  return api.post("/accounts/verify-otp/", data); 
+  return api.post("/accounts/verify-otp/", data);
 };
 
 export const forgotPassword = (data) => {
@@ -24,3 +24,15 @@ export const getProfile = () => {
   return api.get("/accounts/profile/");
 };
 
+// Dashboard APIs
+export const getAdminDashboard = () => {
+  return api.get("/accounts/admin/dashboard/");
+};
+
+export const getInstructorDashboard = () => {
+  return api.get("/accounts/instructor/dashboard/");
+};
+
+export const getStudentDashboard = () => {
+  return api.get("/accounts/student/dashboard/");
+};

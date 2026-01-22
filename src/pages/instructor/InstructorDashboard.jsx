@@ -1,17 +1,19 @@
-import { useEffect, useState } from "react";
-import { getProfile } from "../../api/auth.api";
-import { logout } from "../../utils/auth";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { fetchUserProfile, logout } from "../../store/slices/authSlice";
 import { Card, Button } from "../../components/UIComponents";
 import Navbar from "../../components/Navbar";
 
 export default function InstructorDashboard() {
-  const [profile, setProfile] = useState(null);
+  const dispatch = useDispatch();
+  const { user: profile } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    getProfile().then(res => {
-      setProfile(res.data.data);
-    });
-  }, []);
+    if (!profile) {
+      dispatch(fetchUserProfile());
+    }
+  }, [dispatch, profile]);
 
   return (
     <>
@@ -22,7 +24,7 @@ export default function InstructorDashboard() {
             <h1 className="text-3xl font-bold text-white">
               Instructor <span className="text-neon">Portal</span>
             </h1>
-            <Button variant="danger" onClick={logout} className="!w-auto !py-2 !px-6">
+            <Button variant="danger" onClick={() => dispatch(logout())} className="!w-auto !py-2 !px-6">
               Logout
             </Button>
           </div>
@@ -54,7 +56,9 @@ export default function InstructorDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card title="My Courses">
                 <p className="text-gray-400 mb-6">Manage your courses and content.</p>
-                <Button variant="outline">View Courses</Button>
+                <Link to="/instructor/courses">
+                  <Button variant="outline">View Courses</Button>
+                </Link>
               </Card>
               <Card title="Student Progress">
                 <p className="text-gray-400 mb-6">Track student performance.</p>

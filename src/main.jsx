@@ -1,13 +1,23 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { Provider } from "react-redux";
 import App from "./App";
+import store from "./store/store";
+import setupAxiosInterceptors from "./api/setupAxios";
+import ErrorBoundary from "./components/ErrorBoundary";
 import "./index.css";
+
+setupAxiosInterceptors(store);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <Provider store={store}>
+      <BrowserRouter>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </BrowserRouter>
+    </Provider>
   </StrictMode>
 );

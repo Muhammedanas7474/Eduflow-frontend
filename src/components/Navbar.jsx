@@ -1,8 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../store/slices/authSlice";
 import { Button } from "./UIComponents";
 
 export default function Navbar() {
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { isAuthenticated, role } = useSelector((state) => state.auth);
   const isAuthPage = ["/login", "/register", "/verify", "/forgot-password", "/reset-password"].includes(location.pathname);
 
   return (
@@ -19,14 +23,31 @@ export default function Navbar() {
 
         {!isAuthPage && (
           <div className="flex items-center gap-4">
-            <Link to="/login">
-              <Button variant="ghost" className="!w-auto !py-2 !px-6">Login</Button>
-            </Link>
-            <Link to="/register">
-              <Button variant="primary" className="!w-auto !py-2 !px-6 shadow-neon">
-                Get Started
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to={role === "ADMIN" ? "/admin" : role === "INSTRUCTOR" ? "/instructor" : "/student"}>
+                  <Button variant="ghost" className="!w-auto !py-2 !px-6">Dashboard</Button>
+                </Link>
+                <Button
+                  variant="primary"
+                  className="!w-auto !py-2 !px-6 shadow-neon"
+                  onClick={() => dispatch(logout())}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" className="!w-auto !py-2 !px-6">Login</Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="primary" className="!w-auto !py-2 !px-6 shadow-neon">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>

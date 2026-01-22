@@ -4,9 +4,13 @@ import { verifyOTP } from "../../api/auth.api";
 import { Card, Input, Button } from "../../components/UIComponents";
 import Navbar from "../../components/Navbar";
 
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../../store/slices/authSlice";
+
 export default function VerifyOTP() {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const phone = localStorage.getItem("phone");
   const purpose = localStorage.getItem("otp_purpose");
@@ -27,9 +31,13 @@ export default function VerifyOTP() {
 
       const { access, refresh, role } = res.data.data;
 
+      // Update localStorage (for persistence)
       localStorage.setItem("access", access);
       localStorage.setItem("refresh", refresh);
       localStorage.setItem("role", role);
+
+      // Update Redux state
+      dispatch(setCredentials({ access, refresh, role }));
 
       if (role === "ADMIN") navigate("/admin");
       else if (role === "INSTRUCTOR") navigate("/instructor");
@@ -37,6 +45,7 @@ export default function VerifyOTP() {
 
       localStorage.removeItem("otp_purpose");
     } catch (err) {
+      console.error("OTP Verification Error:", err);
       alert(err?.response?.data?.message || "OTP failed");
     }
   };

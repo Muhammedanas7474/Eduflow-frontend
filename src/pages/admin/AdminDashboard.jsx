@@ -1,12 +1,10 @@
 import { Link } from "react-router-dom";
 import { Card, Button } from "../../components/UIComponents";
-import Navbar from "../../components/Navbar";
 
 export default function AdminDashboard() {
   return (
     <>
-      <Navbar />
-      <div className="min-h-screen bg-black pt-24 px-6">
+      <div>
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-8">
             Admin <span className="text-neon">Dashboard</span>
@@ -22,11 +20,13 @@ export default function AdminDashboard() {
               </Link>
             </Card>
 
-            <Card title="System Settings">
+            <Card title="Enrollments">
               <p className="text-gray-400 mb-6">
-                Configure tenant settings and global preferences.
+                Enroll students in courses.
               </p>
-              <Button variant="ghost" disabled>Coming Soon</Button>
+              <Link to="/admin/enrollments">
+                <Button variant="outline">Manage Enrollments</Button>
+              </Link>
             </Card>
 
             <Card title="Analytics">
