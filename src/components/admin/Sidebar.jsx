@@ -10,9 +10,11 @@ export default function Sidebar() {
 
     const links = [
         { name: "Dashboard", path: "/admin" },
-        { name: "Moderation", path: "/admin/moderation" }, // New Link
-        { name: "Users", path: "/admin/users" },
-        { name: "Enrollments", path: "/admin/enrollments" },
+        { name: "Course Moderation", path: "/admin/moderation" },
+        { name: "Enrollment Approvals", path: "/admin/enrollments" },
+        { name: "User Management", path: "/admin/users" },
+        { name: "Analytics", path: "/admin/analytics" },
+        { name: "Settings", path: "/admin/settings" },
     ];
 
     return (

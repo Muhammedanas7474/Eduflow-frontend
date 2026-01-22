@@ -1,13 +1,13 @@
 import { Outlet } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import StudentSidebar from "../components/student/Sidebar";
 
 export default function DashboardLayout() {
   return (
-    <div className="min-h-screen bg-black text-white">
-      <Navbar />
-      <main className="p-6">
+    <div className="min-h-screen bg-black flex">
+      <StudentSidebar />
+      <div className="flex-1 ml-64 p-8">
         <Outlet />
-      </main>
+      </div>
     </div>
   );
 }

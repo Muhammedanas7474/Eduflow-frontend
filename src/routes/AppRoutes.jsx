@@ -18,7 +18,9 @@ import AdminUsers from "../pages/admin/AdminUsers";
 import AdminModeration from "../pages/admin/AdminModeration";
 import AdminEnrollment from "../pages/admin/AdminEnrollment";
 import InstructorLayout from "../layouts/InstructorLayout";
+import InstructorDashboard from "../pages/instructor/InstructorDashboard";
 import InstructorCourses from "../pages/instructor/InstructorCourses";
+import InstructorEnrollments from "../pages/instructor/InstructorEnrollments";
 import CourseDetail from "../pages/instructor/CourseDetail";
 import StudentDashboard from "../pages/student/StudentDashboard";
 import MyCourses from "../pages/student/MyCourses";
@@ -26,6 +28,7 @@ import EnrollmentRequests from "../pages/student/EnrollmentRequests";
 import StudentCoursePlayer from "../pages/student/StudentCoursePlayer";
 import CourseEnrollments from "../pages/instructor/CourseEnrollments";
 import CourseProgress from "../pages/instructor/CourseProgress";
+import ComingSoon from "../components/ComingSoon";
 
 export default function AppRoutes() {
   return (
@@ -52,6 +55,8 @@ export default function AppRoutes() {
         <Route path="/admin/moderation" element={<AdminModeration />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/enrollments" element={<AdminEnrollment />} />
+        <Route path="/admin/analytics" element={<ComingSoon title="Analytics" backPath="/admin" />} />
+        <Route path="/admin/settings" element={<ComingSoon title="Settings" backPath="/admin" />} />
       </Route>
 
       {/* ===== INSTRUCTOR ===== */}
@@ -62,11 +67,14 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/instructor" element={<Navigate to="/instructor/courses" replace />} />
+        <Route path="/instructor" element={<InstructorDashboard />} />
         <Route path="/instructor/courses" element={<InstructorCourses />} />
         <Route path="/instructor/courses/:id" element={<CourseDetail />} />
         <Route path="/instructor/courses/:id/enrollments" element={<CourseEnrollments />} />
         <Route path="/instructor/courses/:id/progress" element={<CourseProgress />} />
+        <Route path="/instructor/enrollments" element={<InstructorEnrollments />} />
+        <Route path="/instructor/analytics" element={<ComingSoon title="Analytics" backPath="/instructor/courses" />} />
+        <Route path="/instructor/settings" element={<ComingSoon title="Settings" backPath="/instructor/courses" />} />
       </Route>
 
       {/* ===== STUDENT ===== */}
@@ -81,6 +89,8 @@ export default function AppRoutes() {
         <Route path="/student/my-courses" element={<MyCourses />} />
         <Route path="/student/enrollment-requests" element={<EnrollmentRequests />} />
         <Route path="/student/courses/:id" element={<StudentCoursePlayer />} />
+        <Route path="/student/certificates" element={<ComingSoon title="Certificates" backPath="/student" />} />
+        <Route path="/student/settings" element={<ComingSoon title="Settings" backPath="/student" />} />
       </Route>
 
       {/* ===== FALLBACK ===== */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCourses } from "../../store/slices/courseSlice";
+import { fetchCourses, approveCourseById, rejectCourseById } from "../../store/slices/courseSlice";
 import { fetchUsers } from "../../store/slices/adminSlice";
 
 // Icons
@@ -12,27 +12,36 @@ const Icons = {
     MoreVertical: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>,
     Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
     Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
-    ChevronLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
-    ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>,
+    X: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+    Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
 };
 
 export default function AdminModeration() {
     const dispatch = useDispatch();
-    const { courses } = useSelector((state) => state.courses);
+    const { courses, operationStatus } = useSelector((state) => state.courses);
     const { users } = useSelector((state) => state.admin);
     const [activeTab, setActiveTab] = useState("All Courses");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCourses, setSelectedCourses] = useState([]);
+    const [loadingCourseId, setLoadingCourseId] = useState(null);
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         dispatch(fetchCourses());
         dispatch(fetchUsers());
     }, [dispatch]);
 
+    // Show toast notification
+    const showToast = (message, type = "info") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
+
     // Calculate real stats from courses data
     const totalCourses = courses.length;
+    const approvedCourses = courses.filter(c => c.is_approved).length;
+    const pendingApproval = courses.filter(c => !c.is_approved).length;
     const publishedCourses = courses.filter(c => c.is_active).length;
-    const draftCourses = courses.filter(c => !c.is_active).length;
 
     // Derived Stats
     const stats = [
@@ -45,17 +54,17 @@ export default function AdminModeration() {
             iconColor: "text-blue-500"
         },
         {
-            label: "Published",
-            value: publishedCourses,
+            label: "Approved",
+            value: approvedCourses,
             icon: Icons.CheckCircle,
             color: "text-green-500",
             bg: "bg-green-500/10",
             iconColor: "text-green-500"
         },
         {
-            label: "Drafts / Inactive",
-            value: draftCourses,
-            icon: Icons.AlertTriangle,
+            label: "Pending Approval",
+            value: pendingApproval,
+            icon: Icons.Clock,
             color: "text-yellow-500",
             bg: "bg-yellow-500/10",
             iconColor: "text-yellow-500"
@@ -66,25 +75,33 @@ export default function AdminModeration() {
     const getInstructorName = (instructorId) => {
         if (!instructorId) return "Unknown";
         const instructor = users.find(u => u.id === instructorId);
-        return instructor ? (instructor.name || instructor.email || "Unknown") : "Unknown";
+        return instructor ? (instructor.full_name || instructor.email || instructor.phone_number || "Unknown") : "Unknown";
+    };
+
+    const getApprovalBadge = (isApproved) => {
+        if (isApproved) {
+            return <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20">Approved</span>;
+        } else {
+            return <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">Pending</span>;
+        }
     };
 
     const getStatusBadge = (isActive) => {
         if (isActive) {
-            return <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20">Published</span>;
+            return <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">Published</span>;
         } else {
-            return <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">Draft</span>;
+            return <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-700 text-zinc-400 border border-zinc-600">Draft</span>;
         }
     };
 
     // Filter logic
     const filteredCourses = courses.filter(course => {
         const matchesTab = activeTab === "All Courses" ||
-            (activeTab === "Published" && course.is_active) ||
-            (activeTab === "Drafts" && !course.is_active);
+            (activeTab === "Pending Approval" && !course.is_approved) ||
+            (activeTab === "Approved" && course.is_approved);
 
         const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            getInstructorName(course.instructor).toLowerCase().includes(searchQuery.toLowerCase());
+            getInstructorName(course.created_by).toLowerCase().includes(searchQuery.toLowerCase());
 
         return matchesTab && matchesSearch;
     });
@@ -97,23 +114,65 @@ export default function AdminModeration() {
         }
     };
 
+    // Handle Approve
+    const handleApprove = async (courseId) => {
+        setLoadingCourseId(courseId);
+        try {
+            await dispatch(approveCourseById(courseId)).unwrap();
+            showToast("Course approved successfully!", "success");
+        } catch (err) {
+            showToast(`Failed to approve: ${err}`, "error");
+        } finally {
+            setLoadingCourseId(null);
+        }
+    };
+
+    // Handle Reject
+    const handleReject = async (courseId) => {
+        setLoadingCourseId(courseId);
+        try {
+            await dispatch(rejectCourseById(courseId)).unwrap();
+            showToast("Course rejected.", "warning");
+        } catch (err) {
+            showToast(`Failed to reject: ${err}`, "error");
+        } finally {
+            setLoadingCourseId(null);
+        }
+    };
+
     // Define Tabs dynamically with counts
     const tabs = [
         { name: "All Courses", count: totalCourses },
-        { name: "Published", count: publishedCourses },
-        { name: "Drafts", count: draftCourses }
+        { name: "Pending Approval", count: pendingApproval },
+        { name: "Approved", count: approvedCourses }
     ];
 
     return (
         <div className="space-y-6">
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all max-w-sm ${toast.type === 'success' ? 'bg-emerald-500/90 text-white' :
+                    toast.type === 'warning' ? 'bg-yellow-500/90 text-black' :
+                        toast.type === 'error' ? 'bg-red-500/90 text-white' :
+                            'bg-zinc-700 text-white'
+                    }`}>
+                    <div className="flex items-center gap-2">
+                        {toast.type === 'success' && <span>✓</span>}
+                        {toast.type === 'warning' && <span>⚠</span>}
+                        {toast.type === 'error' && <span>✕</span>}
+                        <span className="text-sm font-medium">{toast.message}</span>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
                         <span>Moderation</span>
                     </div>
-                    <h1 className="text-3xl font-bold text-white">Course Moderation</h1>
-                    <p className="text-gray-400">Review and manage course submissions across the platform.</p>
+                    <h1 className="text-3xl font-bold text-white">Course Approval</h1>
+                    <p className="text-gray-400">Review and approve course submissions from instructors.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg border border-zinc-800 hover:bg-zinc-800 transition-colors">
@@ -208,28 +267,49 @@ export default function AdminModeration() {
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-white group-hover:text-[#00cc7d] transition-colors line-clamp-1">{course.title}</h3>
-                                                <p className="text-sm text-gray-500 mt-1">{course.lessons?.length || 0} Lessons • {course.duration || "--"}</p>
+                                                <p className="text-sm text-gray-500 mt-1 line-clamp-1 max-w-xs">{course.description}</p>
+                                                <div className="mt-1">
+                                                    {getStatusBadge(course.is_active)}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="p-4 align-top pt-6">
                                         <div className="flex items-center gap-2">
                                             <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-white">
-                                                {getInstructorName(course.instructor).charAt(0)}
+                                                {getInstructorName(course.created_by).charAt(0).toUpperCase()}
                                             </div>
-                                            <span className="text-sm text-gray-300">{getInstructorName(course.instructor)}</span>
+                                            <span className="text-sm text-gray-300">{getInstructorName(course.created_by)}</span>
                                         </div>
                                     </td>
                                     <td className="p-4 align-top pt-6 text-sm text-gray-400">
                                         {course.updated_at ? new Date(course.updated_at).toLocaleDateString() : "--"}
                                     </td>
                                     <td className="p-4 align-top pt-6">
-                                        {getStatusBadge(course.is_active)}
+                                        {getApprovalBadge(course.is_approved)}
                                     </td>
                                     <td className="p-4 align-top pt-6 text-right">
-                                        <button className="text-gray-500 hover:text-white transition-colors">
-                                            <Icons.MoreVertical />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            {!course.is_approved ? (
+                                                <button
+                                                    onClick={() => handleApprove(course.id)}
+                                                    disabled={loadingCourseId === course.id}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-500 rounded-md text-xs font-bold hover:bg-emerald-500 hover:text-black transition-all disabled:opacity-50"
+                                                >
+                                                    <Icons.Check />
+                                                    {loadingCourseId === course.id ? "..." : "Approve"}
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleReject(course.id)}
+                                                    disabled={loadingCourseId === course.id}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-500 rounded-md text-xs font-bold hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+                                                >
+                                                    <Icons.X />
+                                                    {loadingCourseId === course.id ? "..." : "Revoke"}
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -244,10 +324,7 @@ export default function AdminModeration() {
                 </table>
             </div>
 
-            {/* Pagination Mock (Still needed as backend doesn't support pagination metadata yet?) 
-                Actually the user said "real data fetch". If the fetch returns all, client-side pagination is fine or just listing all.
-                I will leave it simple: "Showing X courses".
-            */}
+            {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>Total {filteredCourses.length} courses</span>
             </div>

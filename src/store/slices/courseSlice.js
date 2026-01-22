@@ -9,6 +9,8 @@ import {
     createLesson,
     updateLesson,
     deleteLesson,
+    approveCourse,
+    rejectCourse,
 } from "../../api/courses.api";
 
 const initialState = {
@@ -128,6 +130,26 @@ export const removeLesson = createAsyncThunk("courses/deleteLesson", async (id, 
     try {
         await deleteLesson(id);
         return id;
+    } catch (err) {
+        return rejectWithValue(extractErrorMessage(err));
+    }
+});
+
+// --- COURSE APPROVAL THUNKS ---
+
+export const approveCourseById = createAsyncThunk("courses/approveCourse", async (id, { rejectWithValue }) => {
+    try {
+        const response = await approveCourse(id);
+        return { id, ...response.data };
+    } catch (err) {
+        return rejectWithValue(extractErrorMessage(err));
+    }
+});
+
+export const rejectCourseById = createAsyncThunk("courses/rejectCourse", async (id, { rejectWithValue }) => {
+    try {
+        const response = await rejectCourse(id);
+        return { id, ...response.data };
     } catch (err) {
         return rejectWithValue(extractErrorMessage(err));
     }
@@ -266,6 +288,44 @@ const courseSlice = createSlice({
             // Delete Lesson
             .addCase(removeLesson.fulfilled, (state, action) => {
                 state.lessons = state.lessons.filter((l) => l.id !== action.payload);
+            })
+
+            // Approve Course
+            .addCase(approveCourseById.pending, (state) => {
+                state.operationStatus = "loading";
+            })
+            .addCase(approveCourseById.fulfilled, (state, action) => {
+                state.operationStatus = "succeeded";
+                const index = state.courses.findIndex((c) => c.id === action.payload.id);
+                if (index !== -1) {
+                    state.courses[index].is_approved = true;
+                }
+                if (state.currentCourse?.id === action.payload.id) {
+                    state.currentCourse.is_approved = true;
+                }
+            })
+            .addCase(approveCourseById.rejected, (state, action) => {
+                state.operationStatus = "failed";
+                state.error = action.payload;
+            })
+
+            // Reject Course
+            .addCase(rejectCourseById.pending, (state) => {
+                state.operationStatus = "loading";
+            })
+            .addCase(rejectCourseById.fulfilled, (state, action) => {
+                state.operationStatus = "succeeded";
+                const index = state.courses.findIndex((c) => c.id === action.payload.id);
+                if (index !== -1) {
+                    state.courses[index].is_approved = false;
+                }
+                if (state.currentCourse?.id === action.payload.id) {
+                    state.currentCourse.is_approved = false;
+                }
+            })
+            .addCase(rejectCourseById.rejected, (state, action) => {
+                state.operationStatus = "failed";
+                state.error = action.payload;
             });
     },
 });

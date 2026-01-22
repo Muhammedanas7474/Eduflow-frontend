@@ -69,18 +69,24 @@ export const createEnrollmentRequest = createAsyncThunk(
     }
 );
 
-// Review enrollment request (Admin)
+// Review enrollment request (Admin or Instructor)
 export const reviewEnrollmentRequest = createAsyncThunk(
     "enrollments/reviewEnrollmentRequest",
     async ({ requestId, action }, { rejectWithValue }) => {
         try {
-            const response = await api.post(`/admin/enrollment-requests/${requestId}/review/`, { action });
-            // The review response might simpler, but let's use extractData for consistency if it returns the updated object in 'data'
+            // Try instructor endpoint first
+            let response;
+            try {
+                response = await api.post(`/instructor/enrollment-requests/${requestId}/review/`, { action });
+            } catch (instructorError) {
+                // If instructor endpoint fails with 403, try admin endpoint
+                if (instructorError.response?.status === 403) {
+                    response = await api.post(`/admin/enrollment-requests/${requestId}/review/`, { action });
+                } else {
+                    throw instructorError;
+                }
+            }
             const data = extractData(response);
-            // If data is just the object, we can return it.
-            // But the reducer expects { requestId, status }.
-            // Let's assume the backend returns the updated request object provided via extractData.
-            // If extractData returns the object, we can use it.
             return { requestId, status: data.status };
         } catch (error) {
             return rejectWithValue(extractErrorMessage(error));

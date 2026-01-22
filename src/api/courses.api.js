@@ -37,3 +37,12 @@ export const updateLesson = (id, data) => {
 export const deleteLesson = (id) => {
     return api.delete(`/lessons/${id}/`);
 };
+
+// COURSE APPROVAL (Admin only)
+export const approveCourse = (id) => {
+    return api.post(`/courses/${id}/approve/`);
+};
+
+export const rejectCourse = (id) => {
+    return api.post(`/courses/${id}/reject/`);
+};

@@ -16,6 +16,7 @@ export default function EnrollmentRequests() {
 
     const [loadingCourses, setLoadingCourses] = useState({});
     const [toast, setToast] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         dispatch(fetchEnrollmentRequests());
@@ -92,9 +93,9 @@ export default function EnrollmentRequests() {
             {/* Toast Notification */}
             {toast && (
                 <div className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all max-w-sm ${toast.type === 'success' ? 'bg-emerald-500/90 text-white' :
-                        toast.type === 'warning' ? 'bg-yellow-500/90 text-black' :
-                            toast.type === 'error' ? 'bg-red-500/90 text-white' :
-                                'bg-zinc-700 text-white'
+                    toast.type === 'warning' ? 'bg-yellow-500/90 text-black' :
+                        toast.type === 'error' ? 'bg-red-500/90 text-white' :
+                            'bg-zinc-700 text-white'
                     }`}>
                     <div className="flex items-center gap-2">
                         {toast.type === 'success' && <span>✓</span>}
@@ -105,61 +106,91 @@ export default function EnrollmentRequests() {
                 </div>
             )}
 
-            <h1 className="text-3xl font-bold text-white mb-8">Browse Courses</h1>
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-white mb-4">Browse Courses</h1>
+                {/* Search Bar */}
+                <div className="relative max-w-md">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search courses..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery("")}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-500 hover:text-white"
+                        >
+                            ✕
+                        </button>
+                    )}
+                </div>
+            </div>
 
             {isLoading && enrollmentRequests.length === 0 && courses.length === 0 ? (
                 <div className="text-center text-zinc-400">Loading...</div>
             ) : (
                 <div className="grid grid-cols-1 gap-6">
-                    {courses.map((course) => {
-                        const status = getRequestStatus(course.id);
-                        return (
-                            <div
-                                key={course.id}
-                                className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-                            >
-                                <div>
-                                    <h2 className="text-xl font-bold text-white mb-2">
-                                        {course.title}
-                                    </h2>
-                                    <p className="text-zinc-400 max-w-2xl">{course.description}</p>
-                                </div>
-
-                                <div className="shrink-0">
-                                    {/* Debug logging (can be removed later) */}
-                                    {/* {console.log(`Course ${course.id} status:`, status)} */}
-
-                                    {status?.toUpperCase() === "PENDING" && (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-500/10 text-yellow-500">
-                                            Processing
-                                        </span>
-                                    )}
-                                    {status === "APPROVED" && (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-500/10 text-emerald-500">
-                                            Ongoing
-                                        </span>
-                                    )}
-                                    {status?.toUpperCase() === "REJECTED" && (
-                                        <div className="flex flex-col items-end gap-2">
-                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/10 text-red-500">
-                                                Request Rejected
-                                            </span>
-                                        </div>
-
-                                    )}
-                                    {!status && (
-                                        <button
-                                            onClick={() => handleRequest(course.id)}
-                                            disabled={loadingCourses[course.id]}
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {loadingCourses[course.id] ? "Requesting..." : "Request Enrollment"}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
+                    {courses
+                        .filter(course =>
+                            course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            (course.description && course.description.toLowerCase().includes(searchQuery.toLowerCase()))
                         )
-                    })}
+                        .map((course) => {
+                            const status = getRequestStatus(course.id);
+                            return (
+                                <div
+                                    key={course.id}
+                                    className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                                >
+                                    <div>
+                                        <h2 className="text-xl font-bold text-white mb-2">
+                                            {course.title}
+                                        </h2>
+                                        <p className="text-zinc-400 max-w-2xl">{course.description}</p>
+                                    </div>
+
+                                    <div className="shrink-0">
+                                        {/* Debug logging (can be removed later) */}
+                                        {/* {console.log(`Course ${course.id} status:`, status)} */}
+
+                                        {status?.toUpperCase() === "PENDING" && (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-500/10 text-yellow-500">
+                                                Processing
+                                            </span>
+                                        )}
+                                        {status === "APPROVED" && (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-500/10 text-emerald-500">
+                                                Ongoing
+                                            </span>
+                                        )}
+                                        {status?.toUpperCase() === "REJECTED" && (
+                                            <div className="flex flex-col items-end gap-2">
+                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/10 text-red-500">
+                                                    Request Rejected
+                                                </span>
+                                            </div>
+
+                                        )}
+                                        {!status && (
+                                            <button
+                                                onClick={() => handleRequest(course.id)}
+                                                disabled={loadingCourses[course.id]}
+                                                className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {loadingCourses[course.id] ? "Requesting..." : "Request Enrollment"}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
 
                     {courses.length === 0 && !isLoading && (
                         <div className="text-center text-zinc-500">

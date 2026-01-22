@@ -20,11 +20,10 @@ export default function Sidebar() {
 
     const links = [
         { name: "Dashboard", path: "/instructor", icon: Icons.Dashboard },
-        { name: "Courses", path: "/instructor/courses", icon: Icons.Courses },
-        { name: "AI Quiz Gen", path: "/instructor/quiz-gen", icon: Icons.Quiz },
+        { name: "My Courses", path: "/instructor/courses", icon: Icons.Courses },
+        { name: "Enrollment Requests", path: "/instructor/enrollments", icon: Icons.Onboarding },
         { name: "Analytics", path: "/instructor/analytics", icon: Icons.Analytics },
-        { name: "Finance", path: "/instructor/finance", icon: Icons.Finance },
-        { name: "Onboarding", path: "/instructor/onboarding", icon: Icons.Onboarding },
+        { name: "Settings", path: "/instructor/settings", icon: Icons.Dashboard },
     ];
 
     return (
@@ -53,8 +52,8 @@ export default function Sidebar() {
                         key={link.path}
                         to={link.path}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${isActive(link.path)
-                                ? "bg-neon/10 text-neon shadow-[0_0_15px_rgba(0,255,157,0.1)] border border-neon/20"
-                                : "text-gray-400 hover:text-white hover:bg-zinc-900"
+                            ? "bg-neon/10 text-neon shadow-[0_0_15px_rgba(0,255,157,0.1)] border border-neon/20"
+                            : "text-gray-400 hover:text-white hover:bg-zinc-900"
                             }`}
                     >
                         <link.icon />
