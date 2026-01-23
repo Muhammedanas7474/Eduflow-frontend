@@ -6,6 +6,7 @@ import App from "./App";
 import store from "./store/store";
 import setupAxiosInterceptors from "./api/setupAxios";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { ToastProvider } from "./components/ToastContext";
 import "./index.css";
 
 setupAxiosInterceptors(store);
@@ -15,7 +16,9 @@ createRoot(document.getElementById("root")).render(
     <Provider store={store}>
       <BrowserRouter>
         <ErrorBoundary>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </ErrorBoundary>
       </BrowserRouter>
     </Provider>

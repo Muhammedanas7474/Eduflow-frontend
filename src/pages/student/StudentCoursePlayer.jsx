@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
     fetchCourseLessons,
@@ -7,6 +7,7 @@ import {
     markLessonComplete,
 } from "../../store/slices/lessonSlice";
 import { fetchCourseById } from "../../store/slices/courseSlice";
+import { fetchMyEnrollments } from "../../store/slices/enrollmentSlice";
 
 export default function StudentCoursePlayer() {
     const { id: courseId } = useParams();
@@ -15,19 +16,34 @@ export default function StudentCoursePlayer() {
     // Selectors
     const { lessons = [], progress, loading: lessonLoading } = useSelector((state) => state.lessons);
     const { currentCourse } = useSelector((state) => state.courses);
+    const { myEnrollments = [] } = useSelector((state) => state.enrollments);
 
     // Local State
     const [activeLesson, setActiveLesson] = useState(null);
+    const [enrollmentChecked, setEnrollmentChecked] = useState(false);
     const videoRef = useRef(null);
+
+    // Check enrollment status
+    const isEnrolled = myEnrollments.some((e) => {
+        const enrolledCourseId = typeof e.course === "object" ? e.course?.id : e.course;
+        return String(enrolledCourseId) === String(courseId);
+    });
 
     // Initial Fetch
     useEffect(() => {
         if (courseId) {
             dispatch(fetchCourseById(courseId));
+            dispatch(fetchMyEnrollments()).then(() => setEnrollmentChecked(true));
+        }
+    }, [dispatch, courseId]);
+
+    // Only fetch lessons if enrolled
+    useEffect(() => {
+        if (enrollmentChecked && isEnrolled && courseId) {
             dispatch(fetchCourseLessons(courseId));
             dispatch(fetchLessonProgress());
         }
-    }, [dispatch, courseId]);
+    }, [dispatch, courseId, enrollmentChecked, isEnrolled]);
 
     // Set initial active lesson or update when lessons load
     useEffect(() => {
@@ -88,6 +104,31 @@ export default function StudentCoursePlayer() {
 
     if (lessonLoading && lessons.length === 0) {
         return <div className="text-center text-zinc-400 mt-10">Loading course content...</div>;
+    }
+
+    // Access denied if not enrolled
+    if (enrollmentChecked && !isEnrolled) {
+        return (
+            <div className="max-w-md mx-auto mt-20 text-center">
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-10V4a1 1 0 00-1-1h-2a1 1 0 00-1 1v1m5 0V4a1 1 0 011-1h2a1 1 0 011 1v1m-9 5a7 7 0 1014 0 7 7 0 00-14 0z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
+                    <p className="text-zinc-400 mb-6">
+                        You are not enrolled in this course. Please request enrollment to access the lessons.
+                    </p>
+                    <Link
+                        to="/student/enrollment-requests"
+                        className="inline-block px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
+                    >
+                        Browse Courses
+                    </Link>
+                </div>
+            </div>
+        );
     }
 
     return (

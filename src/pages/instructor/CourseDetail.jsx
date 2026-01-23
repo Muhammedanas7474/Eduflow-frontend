@@ -7,15 +7,19 @@ import {
     createNewLesson,
     updateExistingLesson,
     removeLesson,
-    clearCurrentCourse
+    clearCurrentCourse,
+    updateExistingCourse
 } from "../../store/slices/courseSlice";
 import { getPresignedUrl, uploadToS3 } from "../../api/upload.api";
 import { Card, Button, Input } from "../../components/UIComponents";
 import Navbar from "../../components/Navbar";
+import ConfirmDialog from "../../components/ConfirmDialog";
+import { useToast } from "../../components/ToastContext";
 
 export default function CourseDetail() {
     const { id } = useParams();
     const dispatch = useDispatch();
+    const toast = useToast();
     const { currentCourse, lessons, status, operationStatus } = useSelector((state) => state.courses);
 
     const [showLessonModal, setShowLessonModal] = useState(false);
@@ -33,6 +37,16 @@ export default function CourseDetail() {
 
     // State to track which lesson's video is currently playing
     const [playingLessonId, setPlayingLessonId] = useState(null);
+
+    // Confirm dialog state
+    const [deleteConfirm, setDeleteConfirm] = useState({ open: false, lessonId: null });
+
+    // Course edit modal state
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editTitle, setEditTitle] = useState("");
+    const [editDescription, setEditDescription] = useState("");
+    const [editIsActive, setEditIsActive] = useState(true);
+    const [editLoading, setEditLoading] = useState(false);
 
     useEffect(() => {
         dispatch(fetchCourseById(id));
@@ -126,9 +140,47 @@ export default function CourseDetail() {
         }
     };
 
-    const handleDeleteLesson = async (lessonId) => {
-        if (window.confirm("Are you sure you want to delete this lesson?")) {
-            dispatch(removeLesson(lessonId));
+    // Open delete confirmation dialog
+    const handleDeleteLesson = (lessonId) => {
+        setDeleteConfirm({ open: true, lessonId });
+    };
+
+    // Confirm deletion
+    const confirmDeleteLesson = async () => {
+        if (deleteConfirm.lessonId) {
+            await dispatch(removeLesson(deleteConfirm.lessonId));
+            toast.success("Lesson deleted successfully");
+        }
+        setDeleteConfirm({ open: false, lessonId: null });
+    };
+
+    // Open course edit modal
+    const openEditModal = () => {
+        setEditTitle(currentCourse?.title || "");
+        setEditDescription(currentCourse?.description || "");
+        setEditIsActive(currentCourse?.is_active ?? true);
+        setShowEditModal(true);
+    };
+
+    // Handle course update
+    const handleUpdateCourse = async (e) => {
+        e.preventDefault();
+        setEditLoading(true);
+        try {
+            await dispatch(updateExistingCourse({
+                id,
+                data: {
+                    title: editTitle,
+                    description: editDescription,
+                    is_active: editIsActive,
+                }
+            })).unwrap();
+            toast.success("Course updated successfully");
+            setShowEditModal(false);
+        } catch (err) {
+            toast.error(typeof err === "string" ? err : "Failed to update course");
+        } finally {
+            setEditLoading(false);
         }
     };
 
@@ -157,9 +209,17 @@ export default function CourseDetail() {
                                 </h1>
                                 <p className="text-gray-400 max-w-2xl">{currentCourse?.description}</p>
                             </div>
-                            <Button variant="primary" onClick={() => setShowLessonModal(true)}>
-                                + Add Lesson
-                            </Button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={openEditModal}
+                                    className="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-colors border border-zinc-700 font-medium"
+                                >
+                                    Edit Course
+                                </button>
+                                <Button variant="primary" onClick={() => setShowLessonModal(true)}>
+                                    + Add Lesson
+                                </Button>
+                            </div>
                         </div>
                         <div className="mt-6 flex gap-4">
                             <Link to={`/instructor/courses/${id}/enrollments`}>
@@ -365,6 +425,63 @@ export default function CourseDetail() {
                             {operationStatus === "failed" && (
                                 <p className="text-red-500 text-sm mt-2 text-center">Check alert for details or try again.</p>
                             )}
+                        </form>
+                    </Card>
+                </div>
+            )}
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirm.open}
+                onClose={() => setDeleteConfirm({ open: false, lessonId: null })}
+                onConfirm={confirmDeleteLesson}
+                title="Delete Lesson"
+                message="Are you sure you want to delete this lesson? This action cannot be undone."
+                confirmText="Delete"
+                variant="danger"
+            />
+
+            {/* Edit Course Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <Card title="Edit Course" className="w-full max-w-md relative">
+                        <button
+                            onClick={() => setShowEditModal(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                        >
+                            ✕
+                        </button>
+                        <form onSubmit={handleUpdateCourse}>
+                            <Input
+                                label="Course Title"
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                                required
+                            />
+                            <div className="mb-4">
+                                <label className="block text-gray-400 text-sm font-medium mb-2">Description</label>
+                                <textarea
+                                    value={editDescription}
+                                    onChange={(e) => setEditDescription(e.target.value)}
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 resize-none"
+                                />
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg border border-zinc-700 mb-4">
+                                <span className="text-white">Published</span>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={editIsActive}
+                                        onChange={(e) => setEditIsActive(e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                </label>
+                            </div>
+                            <Button type="submit" variant="primary" disabled={editLoading}>
+                                {editLoading ? "Saving..." : "Save Changes"}
+                            </Button>
                         </form>
                     </Card>
                 </div>

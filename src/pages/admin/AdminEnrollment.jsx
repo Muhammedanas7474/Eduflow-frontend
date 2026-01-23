@@ -91,70 +91,17 @@ export default function AdminEnrollment() {
                         ) : pendingRequests.length > 0 ? (
                             <div className="divide-y divide-zinc-800">
                                 {pendingRequests.map(req => {
-                                    // We might need to look up student/course names if backend sends IDs
-                                    // enrollmentRequests serializer usually sends IDs. 
-                                    // Let's assume we have full objects or need to look them up.
-                                    // If we only have IDs, we use `users` and `courses` list to find names.
-
-                                    // Check data structure from prompt logs or assumptions.
-                                    // `EnrollmentRequestCreateSerializer` field `course`.
-                                    // But `EnrollmentRequestViewSet` uses `ModelViewSet` default `list`.
-                                    // It likely uses the same serializer. So it has `student` (from user context?) 
-                                    // No, `EnrollmentRequestCreateSerializer` only has `course`.
-                                    // Wait, `perform_create` saves student.
-                                    // Use `serializer`... if `list` uses `create` serializer, it won't show student ID!
-                                    // This is a common issue.
-                                    // BUT `EnrollmentRequestViewSet` in prompt:
-                                    // `serializer_class = EnrollmentRequestCreateSerializer`
-                                    // `class EnrollmentRequestViewSet`...
-                                    // The BACKEND provided in prompt has `serializer_class`.
-                                    // So it uses `EnrollmentRequestCreateSerializer` for `list` too.
-                                    // Which ONLY has `course`.
-                                    // THIS means Admin won't see WHO requested it.
-                                    // This is a backend limitation if true.
-                                    // However, the prompt says "Backend is fully completed... Frontend must strictly consume existing APIs".
-                                    // If the API doesn't return student ID, I can't show it.
-                                    // But usually ViewSets include all fields if using default ModelSerializer without `fields`... 
-                                    // Oh, `EnrollmentRequestCreateSerializer` defines `fields = ["course"]`.
-                                    // This is BAD for `list`.
-                                    // Let's hope the backend actually has a separate list serializer or I missed something.
-                                    // Wait, I can ONLY modify frontend.
-                                    // "❌ Do NOT design backend logic"
-                                    // If the backend returns only `course`, I can't see the student?
-                                    // That would make "Enrollment Approval" impossible to know WHO to approve.
-
-                                    // Is there any other endpoint?
-                                    // Maybe `GET /api/enrollment-requests/` returns more data?
-                                    // If not, I am stuck. 
-                                    // But assume for a moment the backend works for the requirements. 
-                                    // Maybe `EnrollmentRequest` model has `student` and the serializer includes it?
-                                    // The code snippet showed `fields = ["course"]`.
-                                    // If that's the ONLY serializer, then `student` is missing in response.
-                                    // Maybe `fields = ["id", "course", "status", "student"]`?
-
-                                    // Let's blindly assume the response includes `student` ID, 
-                                    // or I have to ask the user.
-                                    // OR maybe `list` view is not overridden but `get_serializer_class` is NOT overridden, 
-                                    // so it uses `serializer_class`.
-
-                                    // I will assume `student` ID is present in the response for now, 
-                                    // because otherwise the feature is broken on backend.
-                                    // I will look up student name from `users` (fetched from Admin slice).
-
-                                    const student = users.find(u => u.id === req.student);
-                                    const course = courses.find(c => c.id === req.course);
-
                                     return (
                                         <div key={req.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-zinc-800/50 transition-colors">
                                             <div>
                                                 <div className="font-medium text-white">
-                                                    {student ? student.full_name : `Student #${req.student}`}
+                                                    {req.student_name || `Student #${req.student}`}
                                                 </div>
                                                 <div className="text-sm text-zinc-400">
-                                                    Request for: <span className="text-emerald-400">{course ? course.title : `Course #${req.course}`}</span>
+                                                    Request for: <span className="text-emerald-400">{req.course_title || `Course #${req.course}`}</span>
                                                 </div>
                                                 <div className="text-xs text-zinc-500 mt-1">
-                                                    {new Date(req.created_at || Date.now()).toLocaleDateString()}
+                                                    {req.requested_at ? new Date(req.requested_at).toLocaleDateString() : "Recently"}
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
@@ -199,7 +146,7 @@ export default function AdminEnrollment() {
                                     <option value="">-- Choose a Student --</option>
                                     {students.map(s => (
                                         <option key={s.id} value={s.id}>
-                                            {s.full_name || s.email}
+                                            {s.full_name || s.email || s.phone_number}
                                         </option>
                                     ))}
                                 </select>

@@ -22,6 +22,7 @@ import InstructorDashboard from "../pages/instructor/InstructorDashboard";
 import InstructorCourses from "../pages/instructor/InstructorCourses";
 import InstructorEnrollments from "../pages/instructor/InstructorEnrollments";
 import CourseDetail from "../pages/instructor/CourseDetail";
+import CreateCourse from "../pages/instructor/CreateCourse";
 import StudentDashboard from "../pages/student/StudentDashboard";
 import MyCourses from "../pages/student/MyCourses";
 import EnrollmentRequests from "../pages/student/EnrollmentRequests";
@@ -29,6 +30,7 @@ import StudentCoursePlayer from "../pages/student/StudentCoursePlayer";
 import CourseEnrollments from "../pages/instructor/CourseEnrollments";
 import CourseProgress from "../pages/instructor/CourseProgress";
 import ComingSoon from "../components/ComingSoon";
+import SettingsPage from "../pages/SettingsPage";
 
 export default function AppRoutes() {
   return (
@@ -56,7 +58,7 @@ export default function AppRoutes() {
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/enrollments" element={<AdminEnrollment />} />
         <Route path="/admin/analytics" element={<ComingSoon title="Analytics" backPath="/admin" />} />
-        <Route path="/admin/settings" element={<ComingSoon title="Settings" backPath="/admin" />} />
+        <Route path="/admin/settings" element={<SettingsPage />} />
       </Route>
 
       {/* ===== INSTRUCTOR ===== */}
@@ -69,12 +71,13 @@ export default function AppRoutes() {
       >
         <Route path="/instructor" element={<InstructorDashboard />} />
         <Route path="/instructor/courses" element={<InstructorCourses />} />
+        <Route path="/instructor/courses/new" element={<CreateCourse />} />
         <Route path="/instructor/courses/:id" element={<CourseDetail />} />
         <Route path="/instructor/courses/:id/enrollments" element={<CourseEnrollments />} />
         <Route path="/instructor/courses/:id/progress" element={<CourseProgress />} />
         <Route path="/instructor/enrollments" element={<InstructorEnrollments />} />
         <Route path="/instructor/analytics" element={<ComingSoon title="Analytics" backPath="/instructor/courses" />} />
-        <Route path="/instructor/settings" element={<ComingSoon title="Settings" backPath="/instructor/courses" />} />
+        <Route path="/instructor/settings" element={<SettingsPage />} />
       </Route>
 
       {/* ===== STUDENT ===== */}
@@ -90,7 +93,7 @@ export default function AppRoutes() {
         <Route path="/student/enrollment-requests" element={<EnrollmentRequests />} />
         <Route path="/student/courses/:id" element={<StudentCoursePlayer />} />
         <Route path="/student/certificates" element={<ComingSoon title="Certificates" backPath="/student" />} />
-        <Route path="/student/settings" element={<ComingSoon title="Settings" backPath="/student" />} />
+        <Route path="/student/settings" element={<SettingsPage />} />
       </Route>
 
       {/* ===== FALLBACK ===== */}

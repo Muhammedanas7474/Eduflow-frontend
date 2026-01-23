@@ -24,6 +24,14 @@ export const getProfile = () => {
   return api.get("/accounts/profile/");
 };
 
+export const updateProfile = (data) => {
+  return api.put("/accounts/profile/update/", data);
+};
+
+export const changePassword = (data) => {
+  return api.post("/accounts/change-password/", data);
+};
+
 // Dashboard APIs
 export const getAdminDashboard = () => {
   return api.get("/accounts/admin/dashboard/");
