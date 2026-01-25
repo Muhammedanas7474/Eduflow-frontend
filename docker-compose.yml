@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build: .
+    container_name: eduflow_frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    restart: unless-stopped
