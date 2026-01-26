@@ -14,7 +14,7 @@ export default function ForgotPassword() {
       await forgotPassword({ phone_number: phone });
 
       localStorage.setItem("phone", phone);
-      localStorage.setItem("otp_purpose", "forgot"); // Ensure backend handles 'forgot' purpose logic if distinct from login
+      localStorage.setItem("otp_purpose", "FORGOT_PASSWORD");
 
       navigate("/reset-password");
     } catch (err) {

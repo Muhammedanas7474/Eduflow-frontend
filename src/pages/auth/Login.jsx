@@ -24,7 +24,7 @@ export default function Login() {
       await loginUser(form);
 
       localStorage.setItem("phone", form.phone_number);
-      localStorage.setItem("otp_purpose", "login");
+      localStorage.setItem("otp_purpose", "LOGIN");
 
       navigate("/verify");
     } catch (err) {

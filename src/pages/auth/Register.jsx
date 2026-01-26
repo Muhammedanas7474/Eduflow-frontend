@@ -24,7 +24,7 @@ export default function Register() {
     try {
       await registerUser(form);
       localStorage.setItem("phone", form.phone_number);
-      localStorage.setItem("otp_purpose", "register");
+      localStorage.setItem("otp_purpose", "REGISTER");
       navigate("/verify");
     } catch (err) {
       alert(err?.response?.data?.message || "Registration failed");

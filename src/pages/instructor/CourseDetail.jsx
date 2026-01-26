@@ -8,7 +8,7 @@ import {
     updateExistingLesson,
     removeLesson,
     clearCurrentCourse,
-    updateExistingCourse
+    updateExistingCourse,
 } from "../../store/slices/courseSlice";
 import { getPresignedUrl, uploadToS3 } from "../../api/upload.api";
 import { Card, Button, Input } from "../../components/UIComponents";
@@ -32,6 +32,8 @@ export default function CourseDetail() {
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadError, setUploadError] = useState(null);
+
+
 
     const [lessonOrder, setLessonOrder] = useState("");
 
@@ -486,6 +488,8 @@ export default function CourseDetail() {
                     </Card>
                 </div>
             )}
+
+
         </>
     );
 }

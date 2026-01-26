@@ -155,6 +155,8 @@ export const rejectCourseById = createAsyncThunk("courses/rejectCourse", async (
     }
 });
 
+
+
 const courseSlice = createSlice({
     name: "courses",
     initialState,
@@ -326,7 +328,9 @@ const courseSlice = createSlice({
             .addCase(rejectCourseById.rejected, (state, action) => {
                 state.operationStatus = "failed";
                 state.error = action.payload;
-            });
+            })
+
+
     },
 });
 

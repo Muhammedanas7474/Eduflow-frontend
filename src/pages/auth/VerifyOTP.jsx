@@ -23,11 +23,14 @@ export default function VerifyOTP() {
     e.preventDefault();
 
     try {
-      const res = await verifyOTP({
+      const payload = {
         phone_number: phone,
         otp,
-        purpose,
-      });
+        purpose: purpose?.toUpperCase(),
+      };
+      console.log("VerifyPayload:", payload);
+
+      const res = await verifyOTP(payload);
 
       const { access, refresh, role } = res.data.data;
 
@@ -46,7 +49,16 @@ export default function VerifyOTP() {
       localStorage.removeItem("otp_purpose");
     } catch (err) {
       console.error("OTP Verification Error:", err);
-      alert(err?.response?.data?.message || "OTP failed");
+      const errorData = err?.response?.data;
+      let errorMessage = "OTP failed";
+
+      if (errorData?.message) {
+        errorMessage = typeof errorData.message === 'object' ? JSON.stringify(errorData.message) : errorData.message;
+      } else if (errorData) {
+        errorMessage = JSON.stringify(errorData);
+      }
+
+      alert(errorMessage);
     }
   };
 
