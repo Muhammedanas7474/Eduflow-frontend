@@ -4,6 +4,7 @@ import adminReducer from "./slices/adminSlice";
 import courseReducer from "./slices/courseSlice";
 import enrollmentReducer from "./slices/enrollmentSlice";
 import lessonReducer from "./slices/lessonSlice";
+import notificationReducer from "./slices/notificationSlice";
 
 const store = configureStore({
     reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
         courses: courseReducer,
         enrollments: enrollmentReducer,
         lessons: lessonReducer,
+        notifications: notificationReducer,
     },
 });
 

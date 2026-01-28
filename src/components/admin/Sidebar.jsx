@@ -18,14 +18,10 @@ export default function Sidebar() {
     ];
 
     return (
-        <div className="w-64 bg-zinc-950 border-r border-zinc-900 min-h-screen flex flex-col">
-            <div className="h-16 flex items-center px-6 border-b border-zinc-900">
-                <span className="text-xl font-bold text-white">
-                    Edu<span className="text-neon">Flow</span> Admin
-                </span>
-            </div>
+        <div className="w-64 bg-zinc-950 border-r border-zinc-900 h-[calc(100vh-5rem)] flex flex-col fixed left-0 top-20">
+            {/* Logo removed - in Navbar */}
 
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-2 mt-2">
                 {links.map((link) => (
                     <Link
                         key={link.path}

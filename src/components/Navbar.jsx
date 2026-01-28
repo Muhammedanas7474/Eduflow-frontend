@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../store/slices/authSlice";
 import { Button } from "./UIComponents";
+import NotificationBell from "./common/NotificationBell";
 
 export default function Navbar() {
   const location = useLocation();
@@ -25,6 +26,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
+                <NotificationBell />
                 <Link to={role === "ADMIN" ? "/admin" : role === "INSTRUCTOR" ? "/instructor" : "/student"}>
                   <Button variant="ghost" className="!w-auto !py-2 !px-6">Dashboard</Button>
                 </Link>

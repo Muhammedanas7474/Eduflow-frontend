@@ -28,26 +28,11 @@ export default function Sidebar() {
     ];
 
     return (
-        <div className="w-64 bg-zinc-950 border-r border-zinc-900 min-h-screen flex flex-col fixed left-0 top-0 h-full z-50">
-            {/* Logo Area */}
-            <div className="h-20 flex items-center px-6 border-b border-zinc-900">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-neon rounded flex items-center justify-center">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M2 17L12 22L22 17" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M2 12L12 17L22 12" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </div>
-                    <div>
-                        <span className="text-lg font-bold text-white block leading-none">EduFlow</span>
-                        <span className="text-[10px] font-bold text-neon tracking-wider">PREMIUM LMS</span>
-                    </div>
-                </div>
-            </div>
+        <div className="w-64 bg-zinc-950 border-r border-zinc-900 h-[calc(100vh-5rem)] flex flex-col fixed left-0 top-20 z-40">
+            {/* Logo Area Removed */}
 
             {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto mt-2">
                 {links.map((link) => (
                     <Link
                         key={link.path}

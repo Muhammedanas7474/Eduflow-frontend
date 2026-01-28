@@ -49,13 +49,8 @@ export default function StudentSidebar() {
     };
 
     return (
-        <div className="fixed left-0 top-0 w-64 bg-zinc-950 border-r border-zinc-900 min-h-screen flex flex-col">
-            {/* Logo */}
-            <div className="h-16 flex items-center px-6 border-b border-zinc-900">
-                <span className="text-xl font-bold text-white">
-                    Edu<span className="text-emerald-500">Flow</span>
-                </span>
-            </div>
+        <div className="fixed left-0 top-20 w-64 bg-zinc-950 border-r border-zinc-900 h-[calc(100vh-5rem)] flex flex-col">
+            {/* Logo removed since it's in Navbar */}
 
             {/* Navigation */}
             <nav className="flex-1 p-4 space-y-1">
@@ -64,8 +59,8 @@ export default function StudentSidebar() {
                         key={link.path}
                         to={link.path}
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${isActive(link.path)
-                                ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                                : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+                            ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                            : "text-zinc-400 hover:text-white hover:bg-zinc-900"
                             }`}
                     >
                         {getIcon(link.icon)}
