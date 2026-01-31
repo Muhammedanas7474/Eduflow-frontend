@@ -31,6 +31,7 @@ import CourseEnrollments from "../pages/instructor/CourseEnrollments";
 import CourseProgress from "../pages/instructor/CourseProgress";
 import ComingSoon from "../components/ComingSoon";
 import SettingsPage from "../pages/SettingsPage";
+import ChatPage from "../pages/ChatPage";
 
 export default function AppRoutes() {
   return (
@@ -95,6 +96,16 @@ export default function AppRoutes() {
         <Route path="/student/certificates" element={<ComingSoon title="Certificates" backPath="/student" />} />
         <Route path="/student/settings" element={<SettingsPage />} />
       </Route>
+
+      {/* ===== CHAT (All authenticated users) ===== */}
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN", "INSTRUCTOR", "STUDENT"]}>
+            <ChatPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* ===== FALLBACK ===== */}
       <Route path="/unauthorized" element={<Unauthorized />} />

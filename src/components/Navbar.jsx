@@ -27,6 +27,9 @@ export default function Navbar() {
             {isAuthenticated ? (
               <>
                 <NotificationBell />
+                <Link to="/chat">
+                  <Button variant="ghost" className="!w-auto !py-2 !px-6 text-neon border-neon hover:bg-neon/10">💬 Chat</Button>
+                </Link>
                 <Link to={role === "ADMIN" ? "/admin" : role === "INSTRUCTOR" ? "/instructor" : "/student"}>
                   <Button variant="ghost" className="!w-auto !py-2 !px-6">Dashboard</Button>
                 </Link>

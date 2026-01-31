@@ -5,7 +5,7 @@ import { Card, Input, Button } from "../../components/UIComponents";
 import Navbar from "../../components/Navbar";
 
 import { useDispatch } from "react-redux";
-import { setCredentials } from "../../store/slices/authSlice";
+import { setCredentials, fetchUserProfile } from "../../store/slices/authSlice";
 
 export default function VerifyOTP() {
   const [otp, setOtp] = useState("");
@@ -32,15 +32,13 @@ export default function VerifyOTP() {
 
       const res = await verifyOTP(payload);
 
-      const { access, refresh, role } = res.data.data;
-
-      // Update localStorage (for persistence)
-      localStorage.setItem("access", access);
-      localStorage.setItem("refresh", refresh);
-      localStorage.setItem("role", role);
+      const { role } = res.data.data;
 
       // Update Redux state
-      dispatch(setCredentials({ access, refresh, role }));
+      // We don't have the full user object yet, but we have the role and we know we are authorized.
+      // We can trigger a profile fetch or just set what we know.
+      dispatch(setCredentials({ role, user: null }));
+      dispatch(fetchUserProfile());
 
       if (role === "ADMIN") navigate("/admin");
       else if (role === "INSTRUCTOR") navigate("/instructor");

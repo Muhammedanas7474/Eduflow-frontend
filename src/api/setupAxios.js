@@ -1,6 +1,6 @@
 import axios from "axios";
 import api from "./axios";
-import { logout, updateAccessToken } from "../store/slices/authSlice";
+import { logout } from "../store/slices/authSlice";
 
 // Token refresh queue to prevent race conditions
 let isRefreshing = false;
@@ -18,12 +18,13 @@ const processQueue = (error, token = null) => {
 };
 
 const setupAxiosInterceptors = (store) => {
+    // Add withCredentials to default instance
+    api.defaults.withCredentials = true;
+
     api.interceptors.request.use(
         (config) => {
-            const token = localStorage.getItem("access");
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+            // We no longer manually inject the token mechanism as it's handled by cookies
+            // However, we might want to ensure we don't accidentally send an old generic header
             return config;
         },
         (error) => Promise.reject(error)
@@ -43,8 +44,7 @@ const setupAxiosInterceptors = (store) => {
                     return new Promise((resolve, reject) => {
                         failedQueue.push({ resolve, reject });
                     })
-                        .then((token) => {
-                            originalRequest.headers.Authorization = `Bearer ${token}`;
+                        .then(() => {
                             return api(originalRequest);
                         })
                         .catch((err) => Promise.reject(err));
@@ -54,25 +54,21 @@ const setupAxiosInterceptors = (store) => {
                 isRefreshing = true;
 
                 try {
-                    const refresh = localStorage.getItem("refresh");
-
-                    if (!refresh) {
-                        throw new Error("No refresh token");
-                    }
-
                     const baseURL = api.defaults.baseURL;
-                    const res = await axios.post(
+
+                    // Call the cookie-based refresh endpoint
+                    // We must pass withCredentials: true explicitly for the scratch instance if used,
+                    // but here we can just use axios default with config
+                    await axios.post(
                         `${baseURL}/accounts/token/refresh/`,
-                        { refresh }
+                        {},
+                        { withCredentials: true }
                     );
 
-                    const newToken = res.data.access;
-                    localStorage.setItem("access", newToken);
-                    store.dispatch(updateAccessToken(newToken));
+                    // Successfully refreshed (cookies updated)
+                    processQueue(null);
 
-                    processQueue(null, newToken);
-                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
+                    // Retry original request
                     return api(originalRequest);
                 } catch (err) {
                     processQueue(err, null);
