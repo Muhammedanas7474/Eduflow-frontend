@@ -1,135 +1,104 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { getWebSocketToken } from '../api/chat.api';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addMessage, updateConnectionStatus } from "../store/slices/chatSlice";
+import { getWebSocketToken } from "../api/chat.api";
 
-/**
- * Custom hook for managing WebSocket chat connections
- * @param {string} room - Room name to join
- * @returns {object} Chat state and functions
- */
-export const useChat = (room) => {
-    const [messages, setMessages] = useState([]);
-    const [isConnected, setIsConnected] = useState(false);
-    const [connectionError, setConnectionError] = useState(null);
-    const [userInfo, setUserInfo] = useState(null);
-    const wsRef = useRef(null);
+const useChat = (activeRoomId) => {
+    const dispatch = useDispatch();
+    const [socket, setSocket] = useState(null);
+    const tokenRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
 
-    const connect = useCallback(async () => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            return; // Already connected
-        }
-
-        try {
-            // Get WebSocket token from backend
-            const token = await getWebSocketToken();
-
-            // Determine WebSocket URL based on current location
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsHost = window.location.hostname;
-            const wsPort = window.location.port === '5173' ? '80' : window.location.port; // Dev server vs production
-            const wsUrl = `${wsProtocol}//${wsHost}${wsPort ? ':' + wsPort : ''}/ws/chat/${room}/?token=${token}`;
-
-            const ws = new WebSocket(wsUrl);
-            wsRef.current = ws;
-
-            ws.onopen = () => {
-                setIsConnected(true);
-                setConnectionError(null);
-                console.log('✅ WebSocket connected to room:', room);
-            };
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-
-                    if (data.type === 'connected') {
-                        // Store user info from welcome message
-                        setUserInfo({
-                            userId: data.user_id,
-                            userName: data.user_name,
-                            tenantId: data.tenant_id,
-                            role: data.role,
-                        });
-                        // Add system message
-                        setMessages(prev => [...prev, {
-                            type: 'system',
-                            message: data.message,
-                            timestamp: new Date().toISOString(),
-                        }]);
-                    } else if (data.type === 'message') {
-                        // Add chat message
-                        setMessages(prev => [...prev, {
-                            type: 'message',
-                            message: data.message,
-                            userId: data.user_id,
-                            userName: data.user_name,
-                            tenantId: data.tenant_id,
-                            timestamp: new Date().toISOString(),
-                        }]);
-                    }
-                } catch (e) {
-                    console.error('Failed to parse message:', e);
-                }
-            };
-
-            ws.onerror = () => {
-                setConnectionError('Connection error');
-            };
-
-            ws.onclose = (event) => {
-                setIsConnected(false);
-                wsRef.current = null;
-
-                if (event.code === 4001) {
-                    setConnectionError('Authentication failed');
-                } else if (event.code !== 1000) {
-                    // Unexpected close - try to reconnect
-                    setConnectionError('Connection lost. Reconnecting...');
-                    reconnectTimeoutRef.current = setTimeout(() => {
-                        connect();
-                    }, 3000);
-                }
-            };
-        } catch (error) {
-            setConnectionError('Failed to get authentication token');
-            console.error('Connection failed:', error);
-        }
-    }, [room]);
-
-    const disconnect = useCallback(() => {
-        if (reconnectTimeoutRef.current) {
-            clearTimeout(reconnectTimeoutRef.current);
-        }
-        if (wsRef.current) {
-            wsRef.current.close(1000);
-            wsRef.current = null;
-        }
-        setIsConnected(false);
-    }, []);
-
-    const sendMessage = useCallback((message) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN && message.trim()) {
-            wsRef.current.send(JSON.stringify({ message: message.trim() }));
-        }
-    }, []);
-
-    // Cleanup on unmount
+    // Fetch token once
     useEffect(() => {
-        return () => {
-            disconnect();
+        const fetchToken = async () => {
+            try {
+                const token = await getWebSocketToken();
+                tokenRef.current = token;
+            } catch (error) {
+                console.error("Failed to fetch WS token:", error);
+            }
         };
-    }, [disconnect]);
+        fetchToken();
+    }, []);
 
-    return {
-        messages,
-        isConnected,
-        connectionError,
-        userInfo,
-        connect,
-        disconnect,
-        sendMessage,
-        clearMessages: () => setMessages([]),
+    const connect = useCallback(() => {
+        if (!activeRoomId || !tokenRef.current) return;
+
+        // Close existing
+        if (socket) {
+            socket.close();
+        }
+
+        const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const wsHost = window.location.host; // Uses current host (e.g. localhost:5173 or ip:port)
+        // Vite proxy will handle /ws -> localhost:80/ws
+        const url = `${wsProtocol}//${wsHost}/ws/chat/${activeRoomId}/?token=${tokenRef.current}`;
+
+        const ws = new WebSocket(url);
+
+        ws.onopen = () => {
+            console.log("WS Connected");
+            dispatch(updateConnectionStatus(true));
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === "chat_message") {
+                dispatch(addMessage({
+                    roomId: activeRoomId,
+                    message: {
+                        id: data.id,
+                        content: data.message,
+                        sender_name: data.sender_name,
+                        timestamp: data.timestamp,
+                        user_id: data.user_id,
+                    }
+                }));
+            }
+        };
+
+        ws.onclose = () => {
+            console.log("WS Disconnected");
+            dispatch(updateConnectionStatus(false));
+            // Simple reconnect logic if needed
+        };
+
+        ws.onerror = (error) => {
+            console.error("WS Error:", error);
+            ws.close();
+        };
+
+        setSocket(ws);
+    }, [activeRoomId, dispatch]);
+
+    // Connect when activeRoomId changes and token is available
+    useEffect(() => {
+        if (tokenRef.current && activeRoomId) {
+            connect();
+        } else if (!tokenRef.current && activeRoomId) {
+            // Wait for token then connect
+            const checkToken = setInterval(() => {
+                if (tokenRef.current) {
+                    clearInterval(checkToken);
+                    connect();
+                }
+            }, 500);
+            return () => clearInterval(checkToken);
+        }
+
+        return () => {
+            if (socket) socket.close();
+        };
+    }, [activeRoomId, connect]);
+
+    const sendMessage = (content) => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ message: content }));
+        }
     };
+
+    return { sendMessage };
 };
 
 export default useChat;

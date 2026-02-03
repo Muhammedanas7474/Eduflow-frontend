@@ -1,14 +1,26 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../store/slices/authSlice";
+import { logoutUser } from "../api/auth.api";
 import { Button } from "./UIComponents";
 import NotificationBell from "./common/NotificationBell";
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isAuthenticated, role } = useSelector((state) => state.auth);
   const isAuthPage = ["/login", "/register", "/verify", "/forgot-password", "/reset-password"].includes(location.pathname);
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+    dispatch(logout());
+    navigate("/");
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-zinc-800">
@@ -36,7 +48,7 @@ export default function Navbar() {
                 <Button
                   variant="primary"
                   className="!w-auto !py-2 !px-6 shadow-neon"
-                  onClick={() => dispatch(logout())}
+                  onClick={handleLogout}
                 >
                   Logout
                 </Button>

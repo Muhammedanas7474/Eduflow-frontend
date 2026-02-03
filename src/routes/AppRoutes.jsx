@@ -31,7 +31,7 @@ import CourseEnrollments from "../pages/instructor/CourseEnrollments";
 import CourseProgress from "../pages/instructor/CourseProgress";
 import ComingSoon from "../components/ComingSoon";
 import SettingsPage from "../pages/SettingsPage";
-import ChatPage from "../pages/ChatPage";
+import ChatPage from "../pages/dashboard/ChatPage";
 
 export default function AppRoutes() {
   return (
@@ -60,6 +60,7 @@ export default function AppRoutes() {
         <Route path="/admin/enrollments" element={<AdminEnrollment />} />
         <Route path="/admin/analytics" element={<ComingSoon title="Analytics" backPath="/admin" />} />
         <Route path="/admin/settings" element={<SettingsPage />} />
+        <Route path="/admin/chat" element={<ChatPage />} />
       </Route>
 
       {/* ===== INSTRUCTOR ===== */}
@@ -79,6 +80,7 @@ export default function AppRoutes() {
         <Route path="/instructor/enrollments" element={<InstructorEnrollments />} />
         <Route path="/instructor/analytics" element={<ComingSoon title="Analytics" backPath="/instructor/courses" />} />
         <Route path="/instructor/settings" element={<SettingsPage />} />
+        <Route path="/instructor/chat" element={<ChatPage />} />
       </Route>
 
       {/* ===== STUDENT ===== */}
@@ -95,17 +97,13 @@ export default function AppRoutes() {
         <Route path="/student/courses/:id" element={<StudentCoursePlayer />} />
         <Route path="/student/certificates" element={<ComingSoon title="Certificates" backPath="/student" />} />
         <Route path="/student/settings" element={<SettingsPage />} />
+        <Route path="/student/chat" element={<ChatPage />} />
       </Route>
 
+      {/* ===== CHAT REDIRECT ===== */}
+      <Route path="/chat" element={<Navigate to="/student/chat" replace />} />
       {/* ===== CHAT (All authenticated users) ===== */}
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute allowedRoles={["ADMIN", "INSTRUCTOR", "STUDENT"]}>
-            <ChatPage />
-          </ProtectedRoute>
-        }
-      />
+
 
       {/* ===== FALLBACK ===== */}
       <Route path="/unauthorized" element={<Unauthorized />} />

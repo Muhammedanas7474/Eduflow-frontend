@@ -21,8 +21,9 @@ export const WebSocketProvider = ({ children }) => {
             if (import.meta.env.VITE_API_BASE_URL) {
                 wsUrl = import.meta.env.VITE_API_BASE_URL.replace(/^http/, "ws") + "/ws/notifications/";
             } else {
+                // Use current host - works with Vite proxy in dev and direct access in prod
                 const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-                const host = "localhost:8000";
+                const host = window.location.host; // Works with Vite proxy!
                 wsUrl = `${protocol}//${host}/ws/notifications/`;
             }
 
@@ -48,6 +49,19 @@ export const WebSocketProvider = ({ children }) => {
                             created_at: data.created_at || new Date().toISOString(),
                             is_read: false
                         }));
+                    } else if (data.type === "chat_notification") {
+                        // Dispatch global toast for chat - REMOVED per user request
+                        // dispatch(addNotification({
+                        //     id: Date.now(),
+                        //     title: `Message from ${data.sender_name}`,
+                        //     message: data.message,
+                        //     type: 'info', // or 'chat' if you have a specific style
+                        //     created_at: data.created_at || new Date().toISOString(),
+                        //     is_read: false
+                        // }));
+
+                        // Emit a custom window event so ChatPage can listen to it without using Redux
+                        window.dispatchEvent(new CustomEvent('chat_message_received', { detail: data }));
                     }
                 } catch (e) {
                     console.error("WS Parse Error", e);

@@ -5,6 +5,7 @@ import courseReducer from "./slices/courseSlice";
 import enrollmentReducer from "./slices/enrollmentSlice";
 import lessonReducer from "./slices/lessonSlice";
 import notificationReducer from "./slices/notificationSlice";
+import chatReducer from "./slices/chatSlice";
 
 const store = configureStore({
     reducer: {
@@ -14,6 +15,7 @@ const store = configureStore({
         enrollments: enrollmentReducer,
         lessons: lessonReducer,
         notifications: notificationReducer,
+        chat: chatReducer,
     },
 });
 

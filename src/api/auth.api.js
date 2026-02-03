@@ -24,6 +24,10 @@ export const getProfile = () => {
   return api.get("/accounts/profile/");
 };
 
+export const logoutUser = () => {
+  return api.post("/accounts/logout/");
+};
+
 export const updateProfile = (data) => {
   return api.put("/accounts/profile/update/", data);
 };

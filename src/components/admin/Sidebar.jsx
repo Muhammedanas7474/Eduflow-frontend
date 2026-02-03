@@ -1,10 +1,22 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
+import { logoutUser } from "../../api/auth.api";
 
 export default function Sidebar() {
     const location = useLocation();
+    const navigate = useNavigate();
     const dispatch = useDispatch();
+
+    const handleLogout = async () => {
+        try {
+            await logoutUser();
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+        dispatch(logout());
+        navigate("/");
+    };
 
     const isActive = (path) => location.pathname === path;
 
@@ -14,6 +26,7 @@ export default function Sidebar() {
         { name: "Enrollment Approvals", path: "/admin/enrollments" },
         { name: "User Management", path: "/admin/users" },
         { name: "Analytics", path: "/admin/analytics" },
+        { name: "Chat", path: "/admin/chat", icon: "chat" },
         { name: "Settings", path: "/admin/settings" },
     ];
 
@@ -38,7 +51,7 @@ export default function Sidebar() {
 
             <div className="p-4 border-t border-zinc-900">
                 <button
-                    onClick={() => dispatch(logout())}
+                    onClick={handleLogout}
                     className="w-full px-4 py-2 text-sm font-medium text-red-400 bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 rounded-md transition-colors"
                 >
                     Logout
