@@ -17,7 +17,7 @@ export default defineConfig({
             },
             // Proxy WebSocket requests to Nginx (which routes to backend)
             '/ws': {
-                target: 'ws://localhost:80',
+                target: 'http://127.0.0.1:80',
                 ws: true,
                 changeOrigin: true,
             },

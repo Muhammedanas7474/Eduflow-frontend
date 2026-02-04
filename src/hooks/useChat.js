@@ -5,7 +5,7 @@ import { getWebSocketToken } from "../api/chat.api";
 
 const useChat = (activeRoomId) => {
     const dispatch = useDispatch();
-    const [socket, setSocket] = useState(null);
+    const socketRef = useRef(null);
     const tokenRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
 
@@ -26,16 +26,17 @@ const useChat = (activeRoomId) => {
         if (!activeRoomId || !tokenRef.current) return;
 
         // Close existing
-        if (socket) {
-            socket.close();
+        if (socketRef.current) {
+            socketRef.current.close();
         }
 
         const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsHost = window.location.host; // Uses current host (e.g. localhost:5173 or ip:port)
-        // Vite proxy will handle /ws -> localhost:80/ws
+        const wsHost = window.location.host;
+        // Vite proxy will handle /ws -> http://127.0.0.1:80/ws
         const url = `${wsProtocol}//${wsHost}/ws/chat/${activeRoomId}/?token=${tokenRef.current}`;
 
         const ws = new WebSocket(url);
+        socketRef.current = ws;
 
         ws.onopen = () => {
             console.log("WS Connected");
@@ -61,7 +62,13 @@ const useChat = (activeRoomId) => {
         ws.onclose = () => {
             console.log("WS Disconnected");
             dispatch(updateConnectionStatus(false));
-            // Simple reconnect logic if needed
+            // Auto-reconnect after 3 seconds
+            reconnectTimeoutRef.current = setTimeout(() => {
+                if (activeRoomId && tokenRef.current) {
+                    console.log("Attempting to reconnect...");
+                    connect();
+                }
+            }, 3000);
         };
 
         ws.onerror = (error) => {
@@ -69,7 +76,6 @@ const useChat = (activeRoomId) => {
             ws.close();
         };
 
-        setSocket(ws);
     }, [activeRoomId, dispatch]);
 
     // Connect when activeRoomId changes and token is available
@@ -88,13 +94,14 @@ const useChat = (activeRoomId) => {
         }
 
         return () => {
-            if (socket) socket.close();
+            if (socketRef.current) socketRef.current.close();
+            if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
         };
     }, [activeRoomId, connect]);
 
     const sendMessage = (content) => {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ message: content }));
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify({ message: content }));
         }
     };
 
