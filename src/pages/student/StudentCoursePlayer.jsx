@@ -1,5 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
+<<<<<<< HEAD
 import { useParams, Link } from "react-router-dom";
+=======
+import { useParams, Link, useNavigate } from "react-router-dom";
+>>>>>>> ed5922e (feat vedio call implementation)
 import { useDispatch, useSelector } from "react-redux";
 import {
     fetchCourseLessons,
@@ -8,10 +12,16 @@ import {
 } from "../../store/slices/lessonSlice";
 import { fetchCourseById } from "../../store/slices/courseSlice";
 import { fetchMyEnrollments } from "../../store/slices/enrollmentSlice";
+<<<<<<< HEAD
+=======
+import { createDM } from "../../api/chat.api";
+import { addRoom, setActiveRoom } from "../../store/slices/chatSlice";
+>>>>>>> ed5922e (feat vedio call implementation)
 
 export default function StudentCoursePlayer() {
     const { id: courseId } = useParams();
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     // Selectors
     const { lessons = [], progress, loading: lessonLoading } = useSelector((state) => state.lessons);
@@ -102,6 +112,19 @@ export default function StudentCoursePlayer() {
         });
     };
 
+    const handleMessageInstructor = async () => {
+        const instructorId = currentCourse?.created_by;
+        if (!instructorId) return;
+        try {
+            const room = await createDM(instructorId);
+            dispatch(addRoom(room));
+            dispatch(setActiveRoom(room));
+            navigate("/student/chat");
+        } catch (err) {
+            console.error("Failed to create DM:", err);
+        }
+    };
+
     if (lessonLoading && lessons.length === 0) {
         return <div className="text-center text-zinc-400 mt-10">Loading course content...</div>;
     }
@@ -133,13 +156,26 @@ export default function StudentCoursePlayer() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 h-[calc(100vh-64px)] overflow-hidden flex flex-col">
-            <div className="mb-4">
-                <h1 className="text-2xl font-bold text-white max-w-4xl truncate">
-                    {currentCourse?.title || "Course Player"}
-                </h1>
-                <p className="text-zinc-400 text-sm">
-                    {lessons?.length || 0} Lessons
-                </p>
+            <div className="mb-4 flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-white max-w-4xl truncate">
+                        {currentCourse?.title || "Course Player"}
+                    </h1>
+                    <p className="text-zinc-400 text-sm">
+                        {lessons?.length || 0} Lessons
+                    </p>
+                </div>
+                {currentCourse?.created_by && (
+                    <button
+                        onClick={handleMessageInstructor}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-all hover:shadow-lg hover:shadow-purple-500/25"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                        </svg>
+                        💬 Message Instructor
+                    </button>
+                )}
             </div>
 
             <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">

@@ -47,7 +47,7 @@ const authSlice = createSlice({
             state.user = null;
             state.role = null;
             state.isAuthenticated = false;
-            state.status = "idle";
+            state.status = "succeeded"; // Prevent spinner loop in protected routes
             state.error = null;
 
             // LocalStorage cleanup for non-sensitive data if any

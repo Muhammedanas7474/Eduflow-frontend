@@ -28,7 +28,10 @@ export default function Login() {
 
       navigate("/verify");
     } catch (err) {
-      alert(err?.response?.data?.message || "Login failed");
+      console.error("Login Error:", err);
+      const data = err?.response?.data;
+      const msg = data?.message || data?.detail || "Login failed";
+      alert(typeof msg === 'object' ? JSON.stringify(msg) : msg);
     }
   };
 

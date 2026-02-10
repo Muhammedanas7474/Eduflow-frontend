@@ -3,10 +3,23 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
     rooms: [],
     activeRoom: null,
+<<<<<<< HEAD
     messages: {}, // { [roomId]: [messages] }
     unreadCounts: {}, // { [roomId]: count }
     isLoading: false,
     isConnected: false,
+=======
+    messages: {},          // { [roomId]: [messages] }
+    unreadCounts: {},      // { [roomId]: count }
+    onlineUsers: [],       // [userId, userId, ...]
+    typingUsers: {},       // { [roomId]: { userId: fullName } }
+    isLoading: false,
+    isConnected: false,
+    // Video call state
+    incomingCall: null,    // { callerId, callerName, sdp, callId }
+    activeCall: null,      // { callId, roomId, remoteUserId }
+    callStatus: null,      // 'ringing' | 'active' | 'ended' | null
+>>>>>>> ed5922e (feat vedio call implementation)
 };
 
 const chatSlice = createSlice({
@@ -15,14 +28,20 @@ const chatSlice = createSlice({
     reducers: {
         setRooms: (state, action) => {
             state.rooms = action.payload;
+<<<<<<< HEAD
             // Initialize unread counts
+=======
+>>>>>>> ed5922e (feat vedio call implementation)
             action.payload.forEach(room => {
                 state.unreadCounts[room.id] = room.unread_count || 0;
             });
         },
         setActiveRoom: (state, action) => {
             state.activeRoom = action.payload;
+<<<<<<< HEAD
             // Clear unread count when entering room
+=======
+>>>>>>> ed5922e (feat vedio call implementation)
             if (action.payload) {
                 state.unreadCounts[action.payload.id] = 0;
             }
@@ -36,7 +55,15 @@ const chatSlice = createSlice({
             if (!state.messages[roomId]) {
                 state.messages[roomId] = [];
             }
+<<<<<<< HEAD
             state.messages[roomId].push(message);
+=======
+            // Prevent duplicate messages
+            const exists = state.messages[roomId].some(m => m.id === message.id);
+            if (!exists) {
+                state.messages[roomId].push(message);
+            }
+>>>>>>> ed5922e (feat vedio call implementation)
 
             // Update last message in room list
             const roomIndex = state.rooms.findIndex(r => r.id === roomId);
@@ -57,8 +84,95 @@ const chatSlice = createSlice({
         updateConnectionStatus: (state, action) => {
             state.isConnected = action.payload;
         },
+<<<<<<< HEAD
     },
 });
 
 export const { setRooms, setActiveRoom, setMessages, addMessage, updateConnectionStatus } = chatSlice.actions;
+=======
+
+        // --- Online / Presence ---
+        setOnlineUsers: (state, action) => {
+            state.onlineUsers = action.payload;
+        },
+        setUserOnline: (state, action) => {
+            const userId = action.payload;
+            if (!state.onlineUsers.includes(userId)) {
+                state.onlineUsers.push(userId);
+            }
+        },
+        setUserOffline: (state, action) => {
+            const userId = action.payload;
+            state.onlineUsers = state.onlineUsers.filter(id => id !== userId);
+        },
+
+        // --- Typing ---
+        setUserTyping: (state, action) => {
+            const { roomId, userId, fullName, isTyping } = action.payload;
+            if (!state.typingUsers[roomId]) {
+                state.typingUsers[roomId] = {};
+            }
+            if (isTyping) {
+                state.typingUsers[roomId][userId] = fullName;
+            } else {
+                delete state.typingUsers[roomId][userId];
+            }
+        },
+
+        // --- Read Receipts ---
+        markMessageRead: (state, action) => {
+            const { roomId, messageId } = action.payload;
+            if (state.messages[roomId]) {
+                const msg = state.messages[roomId].find(m => m.id === messageId);
+                if (msg) {
+                    msg.is_read = true;
+                }
+            }
+        },
+
+        // --- Video Call ---
+        setIncomingCall: (state, action) => {
+            state.incomingCall = action.payload;
+            state.callStatus = action.payload ? "ringing" : null;
+        },
+        setActiveCall: (state, action) => {
+            state.activeCall = action.payload;
+            state.callStatus = action.payload ? "active" : null;
+            state.incomingCall = null;
+        },
+        endCall: (state) => {
+            state.activeCall = null;
+            state.incomingCall = null;
+            state.callStatus = null;
+        },
+
+        // --- Add DM Room to list ---
+        addRoom: (state, action) => {
+            const room = action.payload;
+            const exists = state.rooms.some(r => r.id === room.id);
+            if (!exists) {
+                state.rooms.unshift(room);
+            }
+        },
+    },
+});
+
+export const {
+    setRooms,
+    setActiveRoom,
+    setMessages,
+    addMessage,
+    updateConnectionStatus,
+    setOnlineUsers,
+    setUserOnline,
+    setUserOffline,
+    setUserTyping,
+    markMessageRead,
+    setIncomingCall,
+    setActiveCall,
+    endCall,
+    addRoom,
+} = chatSlice.actions;
+
+>>>>>>> ed5922e (feat vedio call implementation)
 export default chatSlice.reducer;
