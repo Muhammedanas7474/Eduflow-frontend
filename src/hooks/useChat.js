@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-<<<<<<< HEAD
-import { addMessage, updateConnectionStatus } from "../store/slices/chatSlice";
-=======
 import {
     addMessage,
     updateConnectionStatus,
@@ -12,7 +9,6 @@ import {
     setUserTyping,
     markMessageRead,
 } from "../store/slices/chatSlice";
->>>>>>> ed5922e (feat vedio call implementation)
 import { getWebSocketToken } from "../api/chat.api";
 
 const useChat = (activeRoomId) => {
@@ -20,10 +16,7 @@ const useChat = (activeRoomId) => {
     const socketRef = useRef(null);
     const tokenRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
-<<<<<<< HEAD
-=======
     const typingTimeoutRef = useRef(null);
->>>>>>> ed5922e (feat vedio call implementation)
 
     // Fetch token once
     useEffect(() => {
@@ -48,10 +41,6 @@ const useChat = (activeRoomId) => {
 
         const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         const wsHost = window.location.host;
-<<<<<<< HEAD
-        // Vite proxy will handle /ws -> http://127.0.0.1:80/ws
-=======
->>>>>>> ed5922e (feat vedio call implementation)
         const url = `${wsProtocol}//${wsHost}/ws/chat/${activeRoomId}/?token=${tokenRef.current}`;
 
         const ws = new WebSocket(url);
@@ -64,19 +53,6 @@ const useChat = (activeRoomId) => {
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-<<<<<<< HEAD
-            if (data.type === "chat_message") {
-                dispatch(addMessage({
-                    roomId: activeRoomId,
-                    message: {
-                        id: data.id,
-                        content: data.message,
-                        sender_name: data.sender_name,
-                        timestamp: data.timestamp,
-                        user_id: data.user_id,
-                    }
-                }));
-=======
 
             switch (data.type) {
                 case "chat_message":
@@ -123,17 +99,12 @@ const useChat = (activeRoomId) => {
 
                 default:
                     break;
->>>>>>> ed5922e (feat vedio call implementation)
             }
         };
 
         ws.onclose = () => {
             console.log("WS Disconnected");
             dispatch(updateConnectionStatus(false));
-<<<<<<< HEAD
-            // Auto-reconnect after 3 seconds
-=======
->>>>>>> ed5922e (feat vedio call implementation)
             reconnectTimeoutRef.current = setTimeout(() => {
                 if (activeRoomId && tokenRef.current) {
                     console.log("Attempting to reconnect...");
@@ -154,10 +125,6 @@ const useChat = (activeRoomId) => {
         if (tokenRef.current && activeRoomId) {
             connect();
         } else if (!tokenRef.current && activeRoomId) {
-<<<<<<< HEAD
-            // Wait for token then connect
-=======
->>>>>>> ed5922e (feat vedio call implementation)
             const checkToken = setInterval(() => {
                 if (tokenRef.current) {
                     clearInterval(checkToken);
@@ -175,13 +142,6 @@ const useChat = (activeRoomId) => {
 
     const sendMessage = (content) => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-<<<<<<< HEAD
-            socketRef.current.send(JSON.stringify({ message: content }));
-        }
-    };
-
-    return { sendMessage };
-=======
             socketRef.current.send(JSON.stringify({
                 type: "chat_message",
                 message: content,
@@ -226,7 +186,6 @@ const useChat = (activeRoomId) => {
     };
 
     return { sendMessage, startTyping, stopTyping, sendReadReceipt };
->>>>>>> ed5922e (feat vedio call implementation)
 };
 
 export default useChat;

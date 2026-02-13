@@ -1,9 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-<<<<<<< HEAD
-import { useParams, Link } from "react-router-dom";
-=======
 import { useParams, Link, useNavigate } from "react-router-dom";
->>>>>>> ed5922e (feat vedio call implementation)
 import { useDispatch, useSelector } from "react-redux";
 import {
     fetchCourseLessons,
@@ -12,11 +8,8 @@ import {
 } from "../../store/slices/lessonSlice";
 import { fetchCourseById } from "../../store/slices/courseSlice";
 import { fetchMyEnrollments } from "../../store/slices/enrollmentSlice";
-<<<<<<< HEAD
-=======
 import { createDM } from "../../api/chat.api";
 import { addRoom, setActiveRoom } from "../../store/slices/chatSlice";
->>>>>>> ed5922e (feat vedio call implementation)
 
 export default function StudentCoursePlayer() {
     const { id: courseId } = useParams();
@@ -180,15 +173,15 @@ export default function StudentCoursePlayer() {
 
             <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
                 {/* Main Player Area */}
-                <div className="flex-1 flex flex-col bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                <div className="flex-1 flex flex-col bg-zinc-900 border border-zinc-800 rounded-xl overflow-y-auto">
                     {activeLesson ? (
                         <>
-                            <div className="aspect-video bg-black relative">
+                            <div className="w-full bg-black relative flex items-center justify-center max-h-[70vh] aspect-video">
                                 {activeLesson.video_url ? (
                                     <video
                                         ref={videoRef}
                                         controls
-                                        className="w-full h-full"
+                                        className="w-full h-full max-h-[70vh] object-contain"
                                         src={activeLesson.video_url}
                                     >
                                         Your browser does not support the video tag.
@@ -199,7 +192,7 @@ export default function StudentCoursePlayer() {
                                     </div>
                                 )}
                             </div>
-                            <div className="p-6 flex justify-between items-center bg-zinc-900">
+                            <div className="p-6 flex justify-between items-center bg-zinc-900 border-b border-zinc-800">
                                 <div>
                                     <h2 className="text-xl font-bold text-white mb-1">
                                         {activeLesson.title}
@@ -212,14 +205,52 @@ export default function StudentCoursePlayer() {
                                 <button
                                     onClick={handleMarkComplete}
                                     disabled={isCompleted(activeLesson.id)}
-                                    className={`px-6 py-2 rounded-lg font-medium transition-colors ${isCompleted(activeLesson.id)
-                                        ? "bg-emerald-500/10 text-emerald-500 cursor-default"
-                                        : "bg-emerald-600 hover:bg-emerald-500 text-white"
+                                    className={`px-6 py-2 rounded-lg font-bold transition-all transform hover:scale-105 ${isCompleted(activeLesson.id)
+                                        ? "bg-emerald-500 text-black cursor-default shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                                        : "bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 hover:border-zinc-600"
                                         }`}
                                 >
-                                    {isCompleted(activeLesson.id) ? "Completed" : "Mark as Completed"}
+                                    {isCompleted(activeLesson.id) ? "✓ Completed" : "Mark as Completed"}
                                 </button>
                             </div>
+
+                            {/* Lesson Resources */}
+                            <div className="p-6">
+                                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <span>📚</span> Lesson Resources
+                                </h3>
+                                {activeLesson.resources && activeLesson.resources.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {activeLesson.resources.map((resource) => (
+                                            <a
+                                                key={resource.id}
+                                                href={resource.file_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center p-4 bg-zinc-800/50 rounded-xl hover:bg-zinc-800 transition-all border border-zinc-700 group hover:border-zinc-500 shadow-sm hover:shadow-md"
+                                            >
+                                                <div className="w-12 h-12 rounded-lg bg-zinc-900 flex items-center justify-center mr-4 group-hover:bg-black/50 transition-colors text-2xl border border-zinc-800">
+                                                    {resource.file_type === 'link' ? '🔗' : '📄'}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <h4 className="text-white font-medium truncate text-base">{resource.title}</h4>
+                                                    <span className="text-xs text-neon mt-1 block flex items-center gap-1 font-medium">
+                                                        <span>{resource.file_type === 'link' ? 'Open Link' : 'Download File'}</span>
+                                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-zinc-500 italic text-sm p-4 bg-zinc-900/50 rounded-lg border border-zinc-800/50">
+                                        No resources attached to this lesson.
+                                    </div>
+                                )}
+                            </div>
+
                         </>
                     ) : (
                         <div className="flex-1 flex items-center justify-center text-zinc-500">
@@ -281,6 +312,6 @@ export default function StudentCoursePlayer() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

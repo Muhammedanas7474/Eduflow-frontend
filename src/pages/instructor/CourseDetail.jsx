@@ -15,6 +15,7 @@ import { Card, Button, Input } from "../../components/UIComponents";
 import Navbar from "../../components/Navbar";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import { useToast } from "../../components/ToastContext";
+import LessonResourcesModal from "../../components/instructor/LessonResourcesModal";
 
 export default function CourseDetail() {
     const { id } = useParams();
@@ -49,6 +50,10 @@ export default function CourseDetail() {
     const [editDescription, setEditDescription] = useState("");
     const [editIsActive, setEditIsActive] = useState(true);
     const [editLoading, setEditLoading] = useState(false);
+
+    // Resource Modal State
+    const [showResourceModal, setShowResourceModal] = useState(false);
+    const [resourceLesson, setResourceLesson] = useState(null);
 
     useEffect(() => {
         dispatch(fetchCourseById(id));
@@ -140,6 +145,11 @@ export default function CourseDetail() {
             setUploadError("Upload failed. Please try again.");
             setUploading(false);
         }
+    };
+
+    const openResourceModal = (lesson) => {
+        setResourceLesson(lesson);
+        setShowResourceModal(true);
     };
 
     // Open delete confirmation dialog
@@ -260,9 +270,15 @@ export default function CourseDetail() {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => setPlayingLessonId(playingLessonId === lesson.id ? null : lesson.id)}
-                                                className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1 rounded transition-colors"
+                                                className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1 rounded transition-colors border border-zinc-700"
                                             >
                                                 {playingLessonId === lesson.id ? "Hide Video" : "Watch Video"}
+                                            </button>
+                                            <button
+                                                onClick={() => openResourceModal(lesson)}
+                                                className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1 rounded transition-colors ml-2 border border-zinc-700 flex items-center gap-1"
+                                            >
+                                                <span>📚</span> Resources ({lesson.resources ? lesson.resources.length : 0})
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteLesson(lesson.id)}
@@ -489,6 +505,17 @@ export default function CourseDetail() {
                 </div>
             )}
 
+
+            {/* Resource Modal */}
+            {showResourceModal && resourceLesson && (
+                <LessonResourcesModal
+                    lesson={resourceLesson}
+                    onClose={() => {
+                        setShowResourceModal(false);
+                        setResourceLesson(null);
+                    }}
+                />
+            )}
 
         </>
     );

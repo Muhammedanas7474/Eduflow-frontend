@@ -18,7 +18,10 @@ export const uploadToS3 = async (uploadUrl, file, onProgress) => {
         // Credential Format: <Key>/<Date>/<Region>/s3/aws4_request
         // Encoded: <Key>%2F<Date>%2F<Region>%2Fs3...
         // Previous regex failed because it missed the Date component.
-        let macthedRegion = uploadUrl.match(/X-Amz-Credential=[^%]+%2F[^%]+%2F([a-z0-9-]+)%2Fs3/);
+        // Regex to find region in Credential param. 
+        // Handles both encoded (%2F) and unencoded (/) separators.
+        // Look for: /<date>/<region>/s3/aws4_request
+        let macthedRegion = uploadUrl.match(/X-Amz-Credential=[^%&]+[%2F/]+[^%&]+[%2F/]+([a-z0-9-]+)[%2F/]+s3/);
         let finalUrl = uploadUrl;
 
         if (macthedRegion && macthedRegion[1] && uploadUrl.includes("s3.amazonaws.com")) {

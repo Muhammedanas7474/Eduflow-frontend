@@ -49,3 +49,12 @@ export const approveCourse = (id) => {
 export const rejectCourse = (id) => {
     return api.post(`/courses/${id}/reject/`);
 };
+
+// LESSON RESOURCES
+export const createLessonResource = (data) => {
+    return api.post("/lesson-resources/", data);
+};
+
+export const deleteLessonResource = (id) => {
+    return api.delete(`/lesson-resources/${id}/`);
+};

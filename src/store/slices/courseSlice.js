@@ -11,6 +11,8 @@ import {
     deleteLesson,
     approveCourse,
     rejectCourse,
+    createLessonResource,
+    deleteLessonResource,
 } from "../../api/courses.api";
 
 const initialState = {
@@ -150,6 +152,27 @@ export const rejectCourseById = createAsyncThunk("courses/rejectCourse", async (
     try {
         const response = await rejectCourse(id);
         return { id, ...response.data };
+    } catch (err) {
+        return rejectWithValue(extractErrorMessage(err));
+    }
+});
+
+
+// --- LESSON RESOURCES THUNKS ---
+
+export const attachResourceToLesson = createAsyncThunk("courses/attachResource", async (data, { rejectWithValue }) => {
+    try {
+        const response = await createLessonResource(data);
+        return extractData(response);
+    } catch (err) {
+        return rejectWithValue(extractErrorMessage(err));
+    }
+});
+
+export const detachResourceFromLesson = createAsyncThunk("courses/detachResource", async (id, { rejectWithValue }) => {
+    try {
+        await deleteLessonResource(id);
+        return id;
     } catch (err) {
         return rejectWithValue(extractErrorMessage(err));
     }
@@ -329,6 +352,37 @@ const courseSlice = createSlice({
                 state.operationStatus = "failed";
                 state.error = action.payload;
             })
+
+            // Attach Resource
+            .addCase(attachResourceToLesson.pending, (state) => {
+                state.operationStatus = "loading";
+            })
+            .addCase(attachResourceToLesson.fulfilled, (state, action) => {
+                state.operationStatus = "succeeded";
+                const resource = action.payload;
+                const lessonIndex = state.lessons.findIndex((l) => l.id === resource.lesson);
+                if (lessonIndex !== -1) {
+                    if (!state.lessons[lessonIndex].resources) {
+                        state.lessons[lessonIndex].resources = [];
+                    }
+                    state.lessons[lessonIndex].resources.push(resource);
+                }
+            })
+            .addCase(attachResourceToLesson.rejected, (state, action) => {
+                state.operationStatus = "failed";
+                state.error = action.payload;
+            })
+
+            // Detach Resource
+            .addCase(detachResourceFromLesson.fulfilled, (state, action) => {
+                const resourceId = action.payload;
+                // We don't know the lesson ID directly, so we search all lessons
+                state.lessons.forEach((lesson) => {
+                    if (lesson.resources) {
+                        lesson.resources = lesson.resources.filter((r) => r.id !== resourceId);
+                    }
+                });
+            });
 
 
     },
