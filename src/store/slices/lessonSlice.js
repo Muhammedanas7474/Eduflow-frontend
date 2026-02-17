@@ -138,7 +138,15 @@ const lessonSlice = createSlice({
             })
             .addCase(markLessonComplete.fulfilled, (state, action) => {
                 state.loading = false;
-                state.progress.push(action.payload); // Add new progress entry
+                // Check if progress for this lesson already exists
+                const existingIndex = state.progress.findIndex(p =>
+                    (typeof p === 'object' ? p.lesson : p) === action.payload.lesson
+                );
+                if (existingIndex !== -1) {
+                    state.progress[existingIndex] = action.payload;
+                } else {
+                    state.progress.push(action.payload);
+                }
             })
             .addCase(markLessonComplete.rejected, (state, action) => {
                 state.loading = false;

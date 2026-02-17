@@ -8,6 +8,7 @@ import setupAxiosInterceptors from "./api/setupAxios";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ToastProvider } from "./components/ToastContext";
 import "./index.css";
+import "./firebase"; // Initialize Firebase
 
 setupAxiosInterceptors(store);
 

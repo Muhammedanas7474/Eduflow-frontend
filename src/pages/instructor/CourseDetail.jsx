@@ -11,6 +11,7 @@ import {
     updateExistingCourse,
 } from "../../store/slices/courseSlice";
 import { getPresignedUrl, uploadToS3 } from "../../api/upload.api";
+import { generateQuizFromPDF, getCourseQuizzes } from "../../api/quiz.api";
 import { Card, Button, Input } from "../../components/UIComponents";
 import Navbar from "../../components/Navbar";
 import ConfirmDialog from "../../components/ConfirmDialog";
@@ -55,14 +56,82 @@ export default function CourseDetail() {
     const [showResourceModal, setShowResourceModal] = useState(false);
     const [resourceLesson, setResourceLesson] = useState(null);
 
+    // AI Quiz State
+    const [showQuizModal, setShowQuizModal] = useState(false);
+    const [quizGenerating, setQuizGenerating] = useState(false);
+    const [quizNumQuestions, setQuizNumQuestions] = useState(5);
+    const [quizzes, setQuizzes] = useState([]);
+    const [quizzesLoading, setQuizzesLoading] = useState(false);
+
     useEffect(() => {
         dispatch(fetchCourseById(id));
         dispatch(fetchLessons(id));
+        loadQuizzes();
 
         return () => {
             dispatch(clearCurrentCourse());
         };
     }, [dispatch, id]);
+
+    const loadQuizzes = async () => {
+        try {
+            setQuizzesLoading(true);
+            const res = await getCourseQuizzes(id);
+            setQuizzes(res.data);
+        } catch (err) {
+            console.error("Failed to load quizzes:", err);
+        } finally {
+            setQuizzesLoading(false);
+        }
+    };
+
+    // Collect all PDF resources from all lessons
+    const getPdfResources = () => {
+        const pdfs = [];
+        lessons.forEach((lesson) => {
+            if (lesson.resources) {
+                lesson.resources.forEach((res) => {
+                    if (
+                        res.file_type !== "link" &&
+                        (res.file_url?.endsWith(".pdf") || res.file_type?.includes("pdf"))
+                    ) {
+                        pdfs.push({ ...res, lessonTitle: lesson.title });
+                    }
+                });
+            }
+        });
+        return pdfs;
+    };
+
+    const [selectedPdfKey, setSelectedPdfKey] = useState("");
+
+    const handleGenerateQuiz = async () => {
+        if (!selectedPdfKey) {
+            toast.error("Please select a PDF resource.");
+            return;
+        }
+
+        setQuizGenerating(true);
+        try {
+            // Extract S3 key from full URL
+            let pdfKey = selectedPdfKey;
+            // If it's a full S3 URL, extract just the key
+            const s3Match = pdfKey.match(/\.amazonaws\.com\/(.+)$/);
+            if (s3Match) pdfKey = decodeURIComponent(s3Match[1]);
+
+            await generateQuizFromPDF(id, pdfKey, quizNumQuestions);
+            toast.success("Quiz generated successfully!");
+            setShowQuizModal(false);
+            setSelectedPdfKey("");
+            loadQuizzes();
+        } catch (err) {
+            console.error(err);
+            const msg = err.response?.data?.detail || "Failed to generate quiz.";
+            toast.error(msg);
+        } finally {
+            setQuizGenerating(false);
+        }
+    };
 
     const handleCreateLesson = async (e) => {
         e.preventDefault();
@@ -231,6 +300,12 @@ export default function CourseDetail() {
                                 <Button variant="primary" onClick={() => setShowLessonModal(true)}>
                                     + Add Lesson
                                 </Button>
+                                <button
+                                    onClick={() => setShowQuizModal(true)}
+                                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-500 hover:to-indigo-500 transition-all font-medium flex items-center gap-2 shadow-lg shadow-purple-500/20"
+                                >
+                                    🤖 Generate AI Quiz
+                                </button>
                             </div>
                         </div>
                         <div className="mt-6 flex gap-4">
@@ -303,6 +378,42 @@ export default function CourseDetail() {
                                     )}
                                 </div>
                             ))}
+
+                            {/* AI Quizzes Section */}
+                            <div className="mt-8">
+                                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                    🤖 AI Quizzes
+                                    {quizzesLoading && (
+                                        <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                                    )}
+                                </h2>
+
+                                {quizzes.length === 0 && !quizzesLoading && (
+                                    <div className="text-gray-500 italic p-4 border border-zinc-800 rounded bg-zinc-900/30">
+                                        No quizzes generated yet. Click "Generate AI Quiz" to create one from a PDF resource.
+                                    </div>
+                                )}
+
+                                {quizzes.map((quiz) => (
+                                    <Link
+                                        key={quiz.id}
+                                        to={`/instructor/courses/${id}/quiz/${quiz.id}`}
+                                        className="block mb-3 bg-gradient-to-r from-purple-900/20 to-indigo-900/20 border border-purple-500/20 p-4 rounded-lg hover:border-purple-500/40 transition-all group"
+                                    >
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <h3 className="text-white font-medium group-hover:text-purple-300 transition-colors">
+                                                    {quiz.title}
+                                                </h3>
+                                                <p className="text-gray-500 text-sm mt-1">
+                                                    {quiz.questions?.length || 0} questions · Created {new Date(quiz.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <span className="text-gray-600 group-hover:text-purple-400 transition-colors text-lg">→</span>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Course Stats / Info Sidebar */}
@@ -515,6 +626,78 @@ export default function CourseDetail() {
                         setResourceLesson(null);
                     }}
                 />
+            )}
+
+            {/* AI Quiz Generation Modal */}
+            {showQuizModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <Card title="Generate AI Quiz" className="w-full max-w-md relative">
+                        <button
+                            onClick={() => setShowQuizModal(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                        >
+                            ✕
+                        </button>
+
+                        <div className="space-y-5">
+                            <p className="text-gray-400 text-sm">
+                                Select a PDF resource from your lessons. The AI will read it and generate a multiple-choice quiz.
+                            </p>
+
+                            {/* PDF Selector */}
+                            <div>
+                                <label className="block text-gray-400 text-sm font-medium mb-2">PDF Resource</label>
+                                {getPdfResources().length === 0 ? (
+                                    <p className="text-yellow-500 text-sm bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/20">
+                                        ⚠️ No PDF resources found. Upload a PDF to a lesson's resources first.
+                                    </p>
+                                ) : (
+                                    <select
+                                        value={selectedPdfKey}
+                                        onChange={(e) => setSelectedPdfKey(e.target.value)}
+                                        className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                                    >
+                                        <option value="">Select a PDF…</option>
+                                        {getPdfResources().map((pdf) => (
+                                            <option key={pdf.id} value={pdf.file_url}>
+                                                {pdf.title} (from: {pdf.lessonTitle})
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+
+                            {/* Number of Questions */}
+                            <div>
+                                <label className="block text-gray-400 text-sm font-medium mb-2">Number of Questions</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={20}
+                                    value={quizNumQuestions}
+                                    onChange={(e) => setQuizNumQuestions(parseInt(e.target.value) || 5)}
+                                    className="w-24 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                                />
+                            </div>
+
+                            {/* Generate Button */}
+                            <button
+                                onClick={handleGenerateQuiz}
+                                disabled={quizGenerating || !selectedPdfKey}
+                                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-zinc-700 disabled:to-zinc-700 disabled:text-gray-500 text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2"
+                            >
+                                {quizGenerating ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        Generating… This may take a minute
+                                    </>
+                                ) : (
+                                    <>🤖 Generate Quiz</>
+                                )}
+                            </button>
+                        </div>
+                    </Card>
+                </div>
             )}
 
         </>

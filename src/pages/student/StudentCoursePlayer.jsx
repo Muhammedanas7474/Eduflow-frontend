@@ -10,6 +10,7 @@ import { fetchCourseById } from "../../store/slices/courseSlice";
 import { fetchMyEnrollments } from "../../store/slices/enrollmentSlice";
 import { createDM } from "../../api/chat.api";
 import { addRoom, setActiveRoom } from "../../store/slices/chatSlice";
+import { getCourseQuizzes, getLessonQuiz } from "../../api/quiz.api";
 
 export default function StudentCoursePlayer() {
     const { id: courseId } = useParams();
@@ -25,6 +26,14 @@ export default function StudentCoursePlayer() {
     const [activeLesson, setActiveLesson] = useState(null);
     const [enrollmentChecked, setEnrollmentChecked] = useState(false);
     const videoRef = useRef(null);
+
+    // Quiz State
+    const [quizzes, setQuizzes] = useState([]);
+    const [quizzesLoading, setQuizzesLoading] = useState(false);
+
+    // Auto-Quiz State
+    const [quizModal, setQuizModal] = useState(null); // { status, quizId, lessonTitle }
+    const quizPollRef = useRef(null);
 
     // Check enrollment status
     const isEnrolled = myEnrollments.some((e) => {
@@ -45,8 +54,21 @@ export default function StudentCoursePlayer() {
         if (enrollmentChecked && isEnrolled && courseId) {
             dispatch(fetchCourseLessons(courseId));
             dispatch(fetchLessonProgress());
+            loadQuizzes();
         }
     }, [dispatch, courseId, enrollmentChecked, isEnrolled]);
+
+    const loadQuizzes = async () => {
+        try {
+            setQuizzesLoading(true);
+            const res = await getCourseQuizzes(courseId);
+            setQuizzes(res.data);
+        } catch (err) {
+            console.error("Failed to load quizzes:", err);
+        } finally {
+            setQuizzesLoading(false);
+        }
+    };
 
     // Set initial active lesson or update when lessons load
     useEffect(() => {
@@ -92,11 +114,56 @@ export default function StudentCoursePlayer() {
 
     const handleMarkComplete = async () => {
         if (activeLesson) {
-            await dispatch(markLessonComplete(activeLesson.id));
-            // Refresh progress ? The thunk updates state.progress.push(payload).
-            // If payload is { lesson: id, ... } it works.
+            const result = await dispatch(markLessonComplete(activeLesson.id));
+
+            // Check if auto-quiz was triggered
+            const data = result?.payload;
+            if (data?.quiz_status === "generating" || data?.quiz_status === "ready") {
+                setQuizModal({
+                    status: data.quiz_status,
+                    quizId: data.quiz_id,
+                    lessonTitle: activeLesson.title,
+                });
+
+                // If generating, start polling
+                if (data.quiz_status === "generating") {
+                    startQuizPolling(activeLesson.id, activeLesson.title);
+                }
+            }
         }
     };
+
+    const startQuizPolling = (lessonId, lessonTitle) => {
+        // Clear any existing poll
+        if (quizPollRef.current) clearInterval(quizPollRef.current);
+
+        quizPollRef.current = setInterval(async () => {
+            try {
+                const res = await getLessonQuiz(lessonId);
+                const { status, quiz_id } = res.data;
+
+                if (status === "ready") {
+                    clearInterval(quizPollRef.current);
+                    quizPollRef.current = null;
+                    setQuizModal({ status: "ready", quizId: quiz_id, lessonTitle });
+                    loadQuizzes(); // refresh sidebar quizzes
+                } else if (status === "failed") {
+                    clearInterval(quizPollRef.current);
+                    quizPollRef.current = null;
+                    setQuizModal({ status: "failed", quizId: quiz_id, lessonTitle });
+                }
+            } catch (err) {
+                console.error("Quiz poll error:", err);
+            }
+        }, 5000); // poll every 5 seconds
+    };
+
+    // Cleanup poll on unmount
+    useEffect(() => {
+        return () => {
+            if (quizPollRef.current) clearInterval(quizPollRef.current);
+        };
+    }, []);
 
     const isCompleted = (lessonId) => {
         return progress.some(p => {
@@ -204,9 +271,8 @@ export default function StudentCoursePlayer() {
 
                                 <button
                                     onClick={handleMarkComplete}
-                                    disabled={isCompleted(activeLesson.id)}
                                     className={`px-6 py-2 rounded-lg font-bold transition-all transform hover:scale-105 ${isCompleted(activeLesson.id)
-                                        ? "bg-emerald-500 text-black cursor-default shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500/30"
                                         : "bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 hover:border-zinc-600"
                                         }`}
                                 >
@@ -250,6 +316,99 @@ export default function StudentCoursePlayer() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* AI Quizzes Section */}
+                            {quizzes.length > 0 && (
+                                <div className="p-6 border-t border-zinc-800">
+                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                        <span>🤖</span> Quizzes
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {quizzes.map((quiz) => (
+                                            <Link
+                                                key={quiz.id}
+                                                to={`/student/courses/${courseId}/quiz/${quiz.id}`}
+                                                className="flex items-center p-4 bg-gradient-to-r from-purple-900/20 to-indigo-900/20 rounded-xl hover:from-purple-900/30 hover:to-indigo-900/30 transition-all border border-purple-500/20 hover:border-purple-500/40 group shadow-sm hover:shadow-md"
+                                            >
+                                                <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mr-4 text-2xl border border-purple-500/20">
+                                                    📝
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <h4 className="text-white font-medium truncate text-base group-hover:text-purple-300 transition-colors">
+                                                        {quiz.title}
+                                                    </h4>
+                                                    <span className="text-xs text-purple-400 mt-1 block font-medium">
+                                                        {quiz.questions?.length || 0} questions · Take Quiz →
+                                                    </span>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Auto-Quiz Modal */}
+                            {quizModal && (
+                                <div className="p-6 border-t border-zinc-800">
+                                    <div className="bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border border-purple-500/30 rounded-xl p-6">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center text-3xl flex-shrink-0">
+                                                {quizModal.status === "generating" ? "⏳" : quizModal.status === "ready" ? "🎉" : "❌"}
+                                            </div>
+                                            <div className="flex-1">
+                                                {quizModal.status === "generating" && (
+                                                    <>
+                                                        <h3 className="text-lg font-bold text-white mb-1">🤖 Generating Quiz...</h3>
+                                                        <p className="text-zinc-400 text-sm mb-3">
+                                                            AI is creating a quiz from <span className="text-purple-300 font-medium">{quizModal.lessonTitle}</span>'s resources. This usually takes about a minute.
+                                                        </p>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                                                            <span className="text-purple-400 text-sm font-medium">Processing PDF with AI...</span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                {quizModal.status === "ready" && (
+                                                    <>
+                                                        <h3 className="text-lg font-bold text-white mb-1">🎉 Quiz Ready!</h3>
+                                                        <p className="text-zinc-400 text-sm mb-4">
+                                                            Your quiz for <span className="text-purple-300 font-medium">{quizModal.lessonTitle}</span> is ready. Test your understanding!
+                                                        </p>
+                                                        <div className="flex items-center gap-3">
+                                                            <Link
+                                                                to={`/student/courses/${courseId}/quiz/${quizModal.quizId}`}
+                                                                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg shadow-purple-500/25"
+                                                            >
+                                                                📝 Take Quiz Now
+                                                            </Link>
+                                                            <button
+                                                                onClick={() => setQuizModal(null)}
+                                                                className="px-4 py-2.5 text-zinc-400 hover:text-white text-sm transition-colors"
+                                                            >
+                                                                Later
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                {quizModal.status === "failed" && (
+                                                    <>
+                                                        <h3 className="text-lg font-bold text-white mb-1">Quiz Generation Failed</h3>
+                                                        <p className="text-zinc-400 text-sm mb-3">
+                                                            Could not generate a quiz from this lesson's resources. The PDF may not contain enough content.
+                                                        </p>
+                                                        <button
+                                                            onClick={() => setQuizModal(null)}
+                                                            className="px-4 py-2 text-zinc-400 hover:text-white text-sm border border-zinc-700 rounded-lg transition-colors"
+                                                        >
+                                                            Dismiss
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                         </>
                     ) : (
@@ -308,6 +467,36 @@ export default function StudentCoursePlayer() {
                             <div className="text-center p-4 text-zinc-500 text-sm">
                                 No lessons found.
                             </div>
+                        )}
+
+                        {/* Quizzes in Sidebar */}
+                        {quizzes.length > 0 && (
+                            <>
+                                <div className="px-2 pt-4 pb-1">
+                                    <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Quizzes</h4>
+                                </div>
+                                {quizzes.map((quiz) => (
+                                    <Link
+                                        key={quiz.id}
+                                        to={`/student/courses/${courseId}/quiz/${quiz.id}`}
+                                        className="block w-full text-left p-3 rounded-lg border border-transparent bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-all"
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <div className="mt-0.5 rounded-full p-1 text-purple-400 bg-purple-500/10">
+                                                <span className="w-4 h-4 flex items-center justify-center text-xs">📝</span>
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-sm text-zinc-200">
+                                                    {quiz.title}
+                                                </div>
+                                                <div className="text-xs text-purple-400 mt-1">
+                                                    {quiz.questions?.length || 0} questions
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </>
                         )}
                     </div>
                 </div>

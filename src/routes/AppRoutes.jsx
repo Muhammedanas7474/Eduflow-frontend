@@ -32,6 +32,7 @@ import CourseProgress from "../pages/instructor/CourseProgress";
 import ComingSoon from "../components/ComingSoon";
 import SettingsPage from "../pages/SettingsPage";
 import ChatPage from "../pages/dashboard/ChatPage";
+import QuizView from "../pages/quiz/QuizView";
 
 export default function AppRoutes() {
   return (
@@ -77,6 +78,7 @@ export default function AppRoutes() {
         <Route path="/instructor/courses/:id" element={<CourseDetail />} />
         <Route path="/instructor/courses/:id/enrollments" element={<CourseEnrollments />} />
         <Route path="/instructor/courses/:id/progress" element={<CourseProgress />} />
+        <Route path="/instructor/courses/:id/quiz/:quizId" element={<QuizView />} />
         <Route path="/instructor/enrollments" element={<InstructorEnrollments />} />
         <Route path="/instructor/analytics" element={<ComingSoon title="Analytics" backPath="/instructor/courses" />} />
         <Route path="/instructor/settings" element={<SettingsPage />} />
@@ -95,6 +97,7 @@ export default function AppRoutes() {
         <Route path="/student/my-courses" element={<MyCourses />} />
         <Route path="/student/enrollment-requests" element={<EnrollmentRequests />} />
         <Route path="/student/courses/:id" element={<StudentCoursePlayer />} />
+        <Route path="/student/courses/:id/quiz/:quizId" element={<QuizView />} />
         <Route path="/student/certificates" element={<ComingSoon title="Certificates" backPath="/student" />} />
         <Route path="/student/settings" element={<SettingsPage />} />
         <Route path="/student/chat" element={<ChatPage />} />
