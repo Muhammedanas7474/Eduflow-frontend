@@ -100,8 +100,8 @@ const ChatWindow = ({ sendMessage, startTyping, stopTyping, sendReadReceipt, onS
             <div className="px-5 py-3 border-b border-gray-800 bg-gray-900 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isDM
-                            ? "bg-gradient-to-br from-purple-500 to-pink-500"
-                            : "bg-gradient-to-br from-green-500 to-emerald-600"
+                        ? "bg-gradient-to-br from-purple-500 to-pink-500"
+                        : "bg-gradient-to-br from-green-500 to-emerald-600"
                         }`}>
                         {isDM ? "👤" : "📚"}
                     </div>
@@ -125,12 +125,12 @@ const ChatWindow = ({ sendMessage, startTyping, stopTyping, sendReadReceipt, onS
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => onStartCall?.(otherUserId)}
-                            disabled={!isOtherOnline}
-                            className={`p-2.5 rounded-full transition-all ${isOtherOnline
-                                    ? "bg-green-600 hover:bg-green-500 text-white hover:shadow-lg hover:shadow-green-500/25"
-                                    : "bg-gray-700 text-gray-500 cursor-not-allowed"
+                            disabled={false}
+                            className={`p-2.5 rounded-full transition-all ${true
+                                ? "bg-green-600 hover:bg-green-500 text-white hover:shadow-lg hover:shadow-green-500/25"
+                                : "bg-gray-700 text-gray-500 cursor-not-allowed"
                                 }`}
-                            title={isOtherOnline ? "Start video call" : "User is offline"}
+                            title={"Start video call"}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                                 <path strokeLinecap="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
@@ -147,8 +147,8 @@ const ChatWindow = ({ sendMessage, startTyping, stopTyping, sendReadReceipt, onS
                     return (
                         <div key={msg.id || index} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                             <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${isMe
-                                    ? "bg-green-600 text-white rounded-br-sm"
-                                    : "bg-gray-800 text-gray-200 rounded-bl-sm"
+                                ? "bg-green-600 text-white rounded-br-sm"
+                                : "bg-gray-800 text-gray-200 rounded-bl-sm"
                                 }`}>
                                 {!isMe && (
                                     <div className="text-xs font-medium opacity-75 mb-1">
@@ -205,8 +205,8 @@ const ChatWindow = ({ sendMessage, startTyping, stopTyping, sendReadReceipt, onS
                     type="submit"
                     disabled={!input.trim()}
                     className={`rounded-full p-2.5 w-10 h-10 flex items-center justify-center transition-all ${input.trim()
-                            ? "bg-green-600 hover:bg-green-500 text-white hover:shadow-lg hover:shadow-green-500/25"
-                            : "bg-gray-700 text-gray-500"
+                        ? "bg-green-600 hover:bg-green-500 text-white hover:shadow-lg hover:shadow-green-500/25"
+                        : "bg-gray-700 text-gray-500"
                         }`}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">

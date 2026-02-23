@@ -10,14 +10,12 @@ export default defineConfig({
     ],
     server: {
         proxy: {
-            // Proxy API requests to Nginx (which routes to backend)
             '/api': {
-                target: 'http://localhost:80',
+                target: 'http://localhost:8000',
                 changeOrigin: true,
             },
-            // Proxy WebSocket requests to Nginx (which routes to backend)
             '/ws': {
-                target: 'http://127.0.0.1:80',
+                target: 'http://localhost:8000',
                 ws: true,
                 changeOrigin: true,
             },

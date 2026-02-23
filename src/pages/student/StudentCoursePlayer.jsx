@@ -11,6 +11,7 @@ import { fetchMyEnrollments } from "../../store/slices/enrollmentSlice";
 import { createDM } from "../../api/chat.api";
 import { addRoom, setActiveRoom } from "../../store/slices/chatSlice";
 import { getCourseQuizzes, getLessonQuiz } from "../../api/quiz.api";
+import RAGChatbot from "../../components/student/RAGChatbot";
 
 export default function StudentCoursePlayer() {
     const { id: courseId } = useParams();
@@ -501,6 +502,16 @@ export default function StudentCoursePlayer() {
                     </div>
                 </div>
             </div>
+
+            {/* RAG AI Chatbot */}
+            {activeLesson && (
+                <RAGChatbot
+                    courseId={parseInt(courseId)}
+                    lessonId={activeLesson.id}
+                    videoRef={videoRef}
+                    lessonTitle={activeLesson.title}
+                />
+            )}
         </div >
     );
 }

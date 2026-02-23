@@ -1,8 +1,18 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Navbar from "../components/Navbar";
 import { Button } from "../components/UIComponents";
 
 export default function LandingPage() {
+  const { isAuthenticated, role } = useSelector((state) => state.auth);
+
+  // Redirect authenticated users to their role-specific dashboard
+  if (isAuthenticated && role) {
+    const dashboardPath =
+      role === "ADMIN" ? "/admin" : role === "INSTRUCTOR" ? "/instructor" : "/student";
+    return <Navigate to={dashboardPath} replace />;
+  }
+
   return (
     <>
       <Navbar />

@@ -6,6 +6,7 @@ import enrollmentReducer from "./slices/enrollmentSlice";
 import lessonReducer from "./slices/lessonSlice";
 import notificationReducer from "./slices/notificationSlice";
 import chatReducer from "./slices/chatSlice";
+import ragReducer from "./slices/ragSlice";
 
 const store = configureStore({
     reducer: {
@@ -16,7 +17,9 @@ const store = configureStore({
         lessons: lessonReducer,
         notifications: notificationReducer,
         chat: chatReducer,
+        rag: ragReducer,
     },
 });
 
 export default store;
+
