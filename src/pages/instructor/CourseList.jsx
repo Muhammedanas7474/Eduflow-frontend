@@ -11,6 +11,8 @@ export default function CourseList() {
     const [showModal, setShowModal] = useState(false);
     const [newCourseTitle, setNewCourseTitle] = useState("");
     const [newCourseDescription, setNewCourseDescription] = useState("");
+    const [newCourseCategory, setNewCourseCategory] = useState("Technology");
+    const [newCourseTheme, setNewCourseTheme] = useState("technology");
 
     useEffect(() => {
         dispatch(fetchCourses());
@@ -22,11 +24,15 @@ export default function CourseList() {
             await dispatch(createNewCourse({
                 title: newCourseTitle,
                 description: newCourseDescription,
+                category: newCourseCategory,
+                cover_theme: newCourseTheme,
                 is_active: true // default
             })).unwrap();
             setShowModal(false);
             setNewCourseTitle("");
             setNewCourseDescription("");
+            setNewCourseCategory("Technology");
+            setNewCourseTheme("technology");
         } catch (err) {
             alert("Failed to create course");
         }
@@ -100,7 +106,43 @@ export default function CourseList() {
                                     rows="3"
                                     value={newCourseDescription}
                                     onChange={(e) => setNewCourseDescription(e.target.value)}
+                                    required
                                 ></textarea>
+                            </div>
+
+                            <div className="mb-6 grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-gray-400 text-sm font-medium mb-2">Category</label>
+                                    <select
+                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:border-neon transition-colors appearance-none"
+                                        value={newCourseCategory}
+                                        onChange={(e) => setNewCourseCategory(e.target.value)}
+                                        required
+                                    >
+                                        <option value="Design">Design</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Business">Business</option>
+                                        <option value="Technology">Technology</option>
+                                        <option value="Creative">Creative</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-gray-400 text-sm font-medium mb-2">Cover Theme</label>
+                                    <select
+                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:border-neon transition-colors appearance-none"
+                                        value={newCourseTheme}
+                                        onChange={(e) => setNewCourseTheme(e.target.value)}
+                                        required
+                                    >
+                                        <option value="design">Design</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="business">Business</option>
+                                        <option value="technology">Technology</option>
+                                        <option value="creative">Creative</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
                             </div>
                             <Button type="submit" variant="primary" disabled={operationStatus === "loading"}>
                                 {operationStatus === "loading" ? "Creating..." : "Create Course"}

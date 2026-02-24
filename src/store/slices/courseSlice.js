@@ -53,9 +53,9 @@ const extractErrorMessage = (err) => {
     return err.message || "An unexpected error occurred.";
 };
 
-export const fetchCourses = createAsyncThunk("courses/fetchCourses", async (_, { rejectWithValue }) => {
+export const fetchCourses = createAsyncThunk("courses/fetchCourses", async (queryString = "", { rejectWithValue }) => {
     try {
-        const response = await getCourses();
+        const response = await getCourses(queryString);
         return extractData(response);
     } catch (err) {
         return rejectWithValue(extractErrorMessage(err));

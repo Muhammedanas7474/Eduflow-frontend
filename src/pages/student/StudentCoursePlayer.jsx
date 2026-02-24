@@ -5,6 +5,7 @@ import {
     fetchCourseLessons,
     fetchLessonProgress,
     markLessonComplete,
+    resetLessons,
 } from "../../store/slices/lessonSlice";
 import { fetchCourseById } from "../../store/slices/courseSlice";
 import { fetchMyEnrollments } from "../../store/slices/enrollmentSlice";
@@ -45,9 +46,17 @@ export default function StudentCoursePlayer() {
     // Initial Fetch
     useEffect(() => {
         if (courseId) {
+            setActiveLesson(null);
+            dispatch(resetLessons());
             dispatch(fetchCourseById(courseId));
             dispatch(fetchMyEnrollments()).then(() => setEnrollmentChecked(true));
         }
+
+        // Cleanup on unmount or course change
+        return () => {
+            setActiveLesson(null);
+            dispatch(resetLessons());
+        };
     }, [dispatch, courseId]);
 
     // Only fetch lessons if enrolled

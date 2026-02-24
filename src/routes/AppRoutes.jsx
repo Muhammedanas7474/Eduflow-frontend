@@ -26,6 +26,7 @@ import CreateCourse from "../pages/instructor/CreateCourse";
 import StudentDashboard from "../pages/student/StudentDashboard";
 import MyCourses from "../pages/student/MyCourses";
 import EnrollmentRequests from "../pages/student/EnrollmentRequests";
+import CoursePreview from "../pages/student/CoursePreview";
 import StudentCoursePlayer from "../pages/student/StudentCoursePlayer";
 import CourseEnrollments from "../pages/instructor/CourseEnrollments";
 import CourseProgress from "../pages/instructor/CourseProgress";
@@ -93,8 +94,10 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/student" element={<StudentDashboard />} />
-        <Route path="/student/my-courses" element={<MyCourses />} />
+        <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
+        <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/student/courses" element={<MyCourses />} />
+        <Route path="/student/courses/:courseId/preview" element={<CoursePreview />} />
         <Route path="/student/enrollment-requests" element={<EnrollmentRequests />} />
         <Route path="/student/courses/:id" element={<StudentCoursePlayer />} />
         <Route path="/student/courses/:id/quiz/:quizId" element={<QuizView />} />
@@ -110,6 +113,7 @@ export default function AppRoutes() {
 
       {/* ===== FALLBACK ===== */}
       <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="*" element={<Navigate to="/unauthorized" replace />} />
     </Routes >
   );
 }

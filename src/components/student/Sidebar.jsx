@@ -21,8 +21,8 @@ export default function StudentSidebar() {
     const isActive = (path) => location.pathname === path;
 
     const links = [
-        { name: "Dashboard", path: "/student", icon: "home" },
-        { name: "My Courses", path: "/student/my-courses", icon: "book" },
+        { name: "Dashboard", path: "/student/dashboard", icon: "home" },
+        { name: "My Courses", path: "/student/courses", icon: "book" },
         { name: "Browse Courses", path: "/student/enrollment-requests", icon: "search" },
         { name: "Certificates", path: "/student/certificates", icon: "award" },
         { name: "Chat", path: "/student/chat", icon: "chat" },

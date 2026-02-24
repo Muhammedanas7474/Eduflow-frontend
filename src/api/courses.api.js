@@ -1,8 +1,8 @@
 import api from "./axios";
 
 // COURSES
-export const getCourses = () => {
-    return api.get("/courses/");
+export const getCourses = (params = "") => {
+    return api.get(`/courses/${params}`);
 };
 
 export const getCourse = (id) => {
